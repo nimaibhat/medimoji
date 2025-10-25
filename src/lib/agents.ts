@@ -1,7 +1,8 @@
 'use client';
 
 import { LangGraphClient } from '@/lib/langgraph-client';
-import { createDALLEService } from '@/lib/dalle-service';
+import { ImagenClientService, createImagenClientService } from '@/lib/imagen-client';
+import { ImageGenerationResponse } from '@/lib/dalle-service';
 
 export interface AgentResponse {
   content: string;
@@ -49,7 +50,7 @@ export class EmailAgent {
     } catch (error) {
       if (error instanceof Error && error.message.includes('not configured')) {
         return {
-          content: `Please configure your OpenAI API key first to use AI features. Go to Settings to add your API key.`
+          content: `Please configure your Gemini/Replicate API key first to use AI features. Go to Settings to add your API key.`
         };
       }
       return {
@@ -65,8 +66,8 @@ export class IllustrationAgent {
 
   async processMessage(message: string): Promise<AgentResponse> {
     try {
-      // Create DALL-E service for this user
-      const dalleService = await createDALLEService(this.userId);
+      // Create Imagen client service for this user
+      const imagenClient = createImagenClientService(this.userId);
       
       // Determine the style based on the message - default to comic style
       const lowerMessage = message.toLowerCase();
@@ -80,12 +81,19 @@ export class IllustrationAgent {
         style = 'realistic';
       }
       
-      // Generate the medical illustration
-      const result = await dalleService.generateMedicalIllustration(message, style);
+      // Generate the medical illustration with multiple reference images
+      const result = await imagenClient.generateMedicalIllustrationWithMock(message, style, "/public/example.png");
       
       if (result.success && result.imageUrl) {
+        let content = `🎨 **Medical Illustration Generated**\n\nI've created a ${style} medical illustration for you.\n\n**Description:** ${message}\n\n**Style:** ${style}`;
+        
+        // Add panel captions if available
+        if (result.panelCaptions) {
+          content += `\n\n**Panel Descriptions:**\n${result.panelCaptions}`;
+        }
+        
         return {
-          content: `🎨 **Medical Illustration Generated**\n\nI've created a ${style} medical illustration for you.\n\n**Description:** ${message}\n\n**Style:** ${style}`,
+          content,
           toolCalls: [{
             id: 'illustration_generated',
             type: 'image_generation',
@@ -95,7 +103,8 @@ export class IllustrationAgent {
                 imageUrl: result.imageUrl,
                 description: message,
                 style: style,
-                revisedPrompt: result.revisedPrompt
+                revisedPrompt: result.revisedPrompt,
+                panelCaptions: result.panelCaptions
               })
             }
           }]
@@ -108,13 +117,29 @@ export class IllustrationAgent {
     } catch (error) {
       if (error instanceof Error && error.message.includes('not configured')) {
         return {
-          content: `Please configure your OpenAI API key first to use AI features. Go to Settings to add your API key.`
+          content: `Please configure your Gemini/Replicate API key first to use AI features. Go to Settings to add your API key.`
         };
       }
       return {
         content: `I'm having trouble processing your illustration request. Please try again or contact support if the issue persists.`
       };
     }
+  }
+
+  /**
+   * Generate a medical illustration using a mock image reference
+   */
+  async generateMedicalIllustrationWithMock(
+    description: string,
+    style: 'realistic' | 'schematic' | 'patient-friendly' | 'comic' = 'comic',
+    mockImagePath: string
+  ): Promise<ImageGenerationResponse> {
+    const imagenClient = createImagenClientService(this.userId);
+    return await imagenClient.generateMedicalIllustrationWithMock(
+      description,
+      style,
+      mockImagePath
+    );
   }
 }
 
@@ -149,7 +174,7 @@ export class AssistantAgent {
     } catch (error) {
       if (error instanceof Error && error.message.includes('not configured')) {
         return {
-          content: `Please configure your OpenAI API key first to use AI features. Go to Settings to add your API key.`
+          content: `Please configure your Gemini/Replicate API key first to use AI features. Go to Settings to add your API key.`
         };
       }
       return {
