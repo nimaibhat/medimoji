@@ -389,14 +389,19 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
     <group ref={meshRef} rotation={[0, bodyView === 'back' ? Math.PI : 0, 0]}>
       {/* Professional 3D Human Model - Solid */}
       {clonedScene && (
-        <primitive 
-          object={clonedScene} 
-          onClick={handleClick}
-          onPointerOver={() => setHovered(true)}
-          onPointerOut={() => setHovered(false)}
-          scale={[1, 1, 1]}
-          position={[0, -1, 0]}
-        />
+        <>
+          <primitive 
+            object={clonedScene} 
+            scale={[1, 1, 1]}
+            position={[0, -1, 0]}
+          />
+          <mesh
+            onClick={handleClick}
+            visible={false} // Make it invisible
+          >
+            <primitive object={clonedScene.clone()} />
+          </mesh>
+        </>
       )}
 
 
