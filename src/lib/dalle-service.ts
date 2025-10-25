@@ -1,10 +1,6 @@
 import Replicate from "replicate";
 import { writeFile } from "fs/promises";
 
-const replicate = new Replicate();
-
-
-
 export interface ImageGenerationRequest {
   prompt: string;
   style?: 'realistic' | 'schematic' | 'patient-friendly' | 'comic';
@@ -45,7 +41,7 @@ export class ImagenService {
     }
     
     const userData = userSnap.data();
-    const replicateApiKey = userData.replicateApiKey || process.env.REPLICATE_API_KEY;
+    const replicateApiKey = userData.replicateApiKey || process.env.REPLICATE_API_TOKEN;
     console.log('replicateApiKey configured:', !!replicateApiKey);
     
     

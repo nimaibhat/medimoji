@@ -347,28 +347,6 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t border-gray-200">
-          <div className="text-sm text-gray-500">
-            {painPoints.filter(p => p.bodyView === bodyView).length} pain point(s) marked
-          </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSendReport}
-              disabled={painPoints.length === 0}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              <Send className="h-4 w-4" />
-              <span>Send Pain Report</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Analysis Modal */}
