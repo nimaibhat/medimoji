@@ -106,8 +106,8 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
                 mat.envMapIntensity = 0.5; // Reduce environment intensity
                 mat.wireframe = true; // Always show wireframe
                 mat.transparent = true;
-                mat.opacity = 0.3; // Transparent wireframe
-                mat.color.setHex(0x000000); // Black wireframe
+                mat.opacity = 0.4; // Slightly more opaque wireframe
+                mat.color.setHex(0x87CEEB); // Light blue wireframe
                 mat.needsUpdate = true;
                 // Disable expensive features
                 mat.envMap = null;
@@ -119,8 +119,8 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
             child.material.envMapIntensity = 0.5; // Reduce environment intensity
             child.material.wireframe = true; // Always show wireframe
             child.material.transparent = true;
-            child.material.opacity = 0.3; // Transparent wireframe
-            child.material.color.setHex(0x000000); // Black wireframe
+            child.material.opacity = 0.4; // Slightly more opaque wireframe
+            child.material.color.setHex(0x87CEEB); // Light blue wireframe
             child.material.needsUpdate = true;
             // Disable expensive features
             child.material.envMap = null;
@@ -318,10 +318,10 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
         <mesh position={[0, 0, 0]} onClick={handleClick} castShadow receiveShadow>
           <boxGeometry args={[0.6, 2.2, 0.4]} />
           <meshStandardMaterial 
-            color="#000000" 
+            color="#87CEEB" 
             wireframe={true}
             transparent={true}
-            opacity={0.3}
+            opacity={0.4}
           />
         </mesh>
         
@@ -329,10 +329,10 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
         <mesh position={[0, 1.2, 0]} onClick={handleClick} castShadow receiveShadow>
           <sphereGeometry args={[0.3, 16, 16]} />
           <meshStandardMaterial 
-            color="#000000" 
+            color="#87CEEB" 
             wireframe={true}
             transparent={true}
-            opacity={0.3}
+            opacity={0.4}
           />
         </mesh>
         
@@ -340,19 +340,19 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
         <mesh position={[-0.5, 0.5, 0]} onClick={handleClick} castShadow receiveShadow>
           <cylinderGeometry args={[0.1, 0.1, 1, 8]} />
           <meshStandardMaterial 
-            color="#000000" 
+            color="#87CEEB" 
             wireframe={true}
             transparent={true}
-            opacity={0.3}
+            opacity={0.4}
           />
         </mesh>
         <mesh position={[0.5, 0.5, 0]} onClick={handleClick} castShadow receiveShadow>
           <cylinderGeometry args={[0.1, 0.1, 1, 8]} />
           <meshStandardMaterial 
-            color="#000000" 
+            color="#87CEEB" 
             wireframe={true}
             transparent={true}
-            opacity={0.3}
+            opacity={0.4}
           />
         </mesh>
         
@@ -360,19 +360,19 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
         <mesh position={[-0.2, -1.1, 0]} onClick={handleClick} castShadow receiveShadow>
           <cylinderGeometry args={[0.12, 0.12, 1.2, 8]} />
           <meshStandardMaterial 
-            color="#000000" 
+            color="#87CEEB" 
             wireframe={true}
             transparent={true}
-            opacity={0.3}
+            opacity={0.4}
           />
         </mesh>
         <mesh position={[0.2, -1.1, 0]} onClick={handleClick} castShadow receiveShadow>
           <cylinderGeometry args={[0.12, 0.12, 1.2, 8]} />
           <meshStandardMaterial 
-            color="#000000" 
+            color="#87CEEB" 
             wireframe={true}
             transparent={true}
-            opacity={0.3}
+            opacity={0.4}
           />
         </mesh>
 
@@ -442,37 +442,37 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
           {/* Head clickable area indicator */}
           <mesh position={[0, 1.2, 0]}>
             <sphereGeometry args={[0.35, 16, 16]} />
-            <meshBasicMaterial color="#00ff00" transparent opacity={0.2} wireframe />
+            <meshBasicMaterial color="#87CEEB" transparent opacity={0.3} wireframe />
           </mesh>
           
           {/* Torso clickable area indicator */}
           <mesh position={[0, 0, 0]}>
             <boxGeometry args={[0.7, 2.4, 0.5]} />
-            <meshBasicMaterial color="#00ff00" transparent opacity={0.2} wireframe />
+            <meshBasicMaterial color="#87CEEB" transparent opacity={0.3} wireframe />
           </mesh>
           
           {/* Left arm clickable area indicator */}
           <mesh position={[-0.5, 0.5, 0]}>
             <cylinderGeometry args={[0.15, 0.15, 1.2, 8]} />
-            <meshBasicMaterial color="#00ff00" transparent opacity={0.2} wireframe />
+            <meshBasicMaterial color="#87CEEB" transparent opacity={0.3} wireframe />
           </mesh>
           
           {/* Right arm clickable area indicator */}
           <mesh position={[0.5, 0.5, 0]}>
             <cylinderGeometry args={[0.15, 0.15, 1.2, 8]} />
-            <meshBasicMaterial color="#00ff00" transparent opacity={0.2} wireframe />
+            <meshBasicMaterial color="#87CEEB" transparent opacity={0.3} wireframe />
           </mesh>
           
           {/* Left leg clickable area indicator */}
           <mesh position={[-0.2, -1.1, 0]}>
             <cylinderGeometry args={[0.17, 0.17, 1.4, 8]} />
-            <meshBasicMaterial color="#00ff00" transparent opacity={0.2} wireframe />
+            <meshBasicMaterial color="#87CEEB" transparent opacity={0.3} wireframe />
           </mesh>
           
           {/* Right leg clickable area indicator */}
           <mesh position={[0.2, -1.1, 0]}>
             <cylinderGeometry args={[0.17, 0.17, 1.4, 8]} />
-            <meshBasicMaterial color="#00ff00" transparent opacity={0.2} wireframe />
+            <meshBasicMaterial color="#87CEEB" transparent opacity={0.3} wireframe />
           </mesh>
         </>
       )}
@@ -496,11 +496,16 @@ function ThrobbingPainPoint({ position, color, size }: { position: [number, numb
 
   return (
     <group ref={groupRef} position={position}>
-      {/* Pulsing circles */}
+      {/* Pulsing spheres that work on any surface */}
       {[...Array(3)].map((_, i) => (
         <mesh key={i}>
-          <ringGeometry args={[size / 40 + i * 0.05, size / 40 + i * 0.05 + 0.02, 16]} />
-          <meshBasicMaterial color={color} transparent opacity={0.5 - i * 0.1} />
+          <sphereGeometry args={[size / 20 + i * 0.02, 16, 16]} />
+          <meshBasicMaterial 
+            color={color} 
+            transparent 
+            opacity={0.6 - i * 0.15} 
+            wireframe={i === 0} // Inner sphere is solid, outer ones are wireframe
+          />
         </mesh>
       ))}
     </group>
