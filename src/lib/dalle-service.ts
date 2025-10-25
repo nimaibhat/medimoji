@@ -45,8 +45,13 @@ export class ImagenService {
     }
     
     const userData = userSnap.data();
+    console.log('User data:', userData);
+    console.log('User replicateApiKey:', userData?.replicateApiKey);
+    console.log('Environment REPLICATE_API_KEY:', process.env.REPLICATE_API_KEY);
+    
     const replicateApiKey = userData.replicateApiKey || process.env.REPLICATE_API_KEY;
-    console.log('replicateApiKey configured:', !!replicateApiKey);
+    console.log('Final replicateApiKey configured:', !!replicateApiKey);
+    console.log('API key length:', replicateApiKey?.length);
     
     
     if (!replicateApiKey) {
