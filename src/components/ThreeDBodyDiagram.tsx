@@ -146,24 +146,26 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
   // Function to detect body part based on 3D coordinates
   const detectBodyPart = (x: number, y: number, z: number): string => {
     // Get the actual model bounds to make detection more accurate
-    const modelHeight = 2.2; // Approximate model height
-    const modelCenter = -1; // Model is positioned at y = -1
-    
-    // Calculate relative position within the model
-    const relativeY = (y - modelCenter) / modelHeight;
-    
-    // Use more precise thresholds based on actual model proportions
-    if (relativeY > 0.8) {
+    // Model is positioned at y = -1 and extends upward
+    const modelBottom = -2.1; // Bottom of feet
+    const modelTop = 0.1; // Top of head
+    const modelHeight = modelTop - modelBottom; // Total height = 2.2
+
+    // Calculate relative position from bottom (0 = feet, 1 = head)
+    const relativeY = (y - modelBottom) / modelHeight;
+
+    // Use anatomically accurate thresholds based on human body proportions
+    if (relativeY > 0.88) {
       return 'Head & Neck';
-    } else if (relativeY > 0.6) {
+    } else if (relativeY > 0.72) {
       return 'Shoulders & Arms';
-    } else if (relativeY > 0.3) {
+    } else if (relativeY > 0.58) {
       return 'Chest & Pectorals';
-    } else if (relativeY > 0.0) {
+    } else if (relativeY > 0.45) {
       return 'Abdomen & Abs';
-    } else if (relativeY > -0.3) {
+    } else if (relativeY > 0.35) {
       return 'Pelvis & Hips';
-    } else if (relativeY > -0.6) {
+    } else if (relativeY > 0.18) {
       return 'Thighs & Quads';
     } else {
       return 'Calves & Shins';
@@ -188,9 +190,11 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
       });
       
       // Debug logging to help calibrate coordinates
-      const relativeY = (intersection.y - (-1)) / 2.2;
+      const modelBottom = -2.1;
+      const modelHeight = 2.2;
+      const relativeY = (intersection.y - modelBottom) / modelHeight;
       console.log(`Click coordinates: x=${intersection.x.toFixed(2)}, y=${intersection.y.toFixed(2)}, z=${intersection.z.toFixed(2)}`);
-      console.log(`Relative Y position: ${relativeY.toFixed(2)}`);
+      console.log(`Relative Y position: ${relativeY.toFixed(2)} (0=feet, 1=head)`);
       console.log(`Detected body part: ${bodyPart}`);
       console.log(`Model loaded: ${modelLoaded}, Using fallback: ${useFallback}`);
       
@@ -423,7 +427,7 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
                 <div>Z: {lastClickCoords.z.toFixed(2)}</div>
                 <div>Body Part: {lastClickCoords.bodyPart}</div>
                 <div className="mt-1 text-yellow-300">
-                  Relative Y: {((lastClickCoords.y - (-1)) / 2.2).toFixed(2)}
+                  Relative Y: {((lastClickCoords.y - (-2.1)) / 2.2).toFixed(2)} (0=feet, 1=head)
                 </div>
                 <div className="mt-1 text-green-300">
                   Model: {useFallback ? 'Fallback' : 'GLB'} | Loaded: {modelLoaded ? 'Yes' : 'No'}
