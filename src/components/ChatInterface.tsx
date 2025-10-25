@@ -40,7 +40,6 @@ import ImageDisplay from './ImageDisplay';
 import MarkdownRenderer from './MarkdownRenderer';
 import VoiceTranslationWidget from './VoiceTranslationWidget';
 import MedicalIllustrationTranslator from './MedicalIllustrationTranslator';
-import VapiTranslationPopup from './VapiTranslationPopup';
 import PainDrawingTool from './PainDrawingTool';
 
 interface Message {
@@ -102,7 +101,6 @@ export default function ChatInterface({ selectedAgent }: ChatInterfaceProps) {
   const isCreatingConversationRef = useRef(false);
   const [showTranslationWidget, setShowTranslationWidget] = useState(false);
   const [showIllustrationTranslator, setShowIllustrationTranslator] = useState(false);
-  const [showVapiTranslation, setShowVapiTranslation] = useState(false);
   const [showPainDrawingTool, setShowPainDrawingTool] = useState(false);
   const [selectedImageForTranslation, setSelectedImageForTranslation] = useState<{
     url: string;
@@ -824,14 +822,6 @@ This visual pain assessment will help your healthcare provider better understand
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowVapiTranslation(true)}
-                  className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"
-                  title="Voice Translation"
-                >
-                  <Languages className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
                   onClick={() => setShowPainDrawingTool(true)}
                   className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
                   title="Draw Your Pain"
@@ -907,11 +897,6 @@ This visual pain assessment will help your healthcare provider better understand
         />
       )}
 
-      {/* VAPI Translation Popup */}
-      <VapiTranslationPopup
-        isOpen={showVapiTranslation}
-        onClose={() => setShowVapiTranslation(false)}
-      />
 
       {/* Pain Drawing Tool */}
       <PainDrawingTool
