@@ -147,30 +147,36 @@ export default function VoiceTranslationWidget({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden">
+      <div className="rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden" style={{ backgroundColor: '#F8FBFC' }}>
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+        <div className="p-6" style={{ backgroundColor: '#113B5C' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Languages className="h-6 w-6" />
-              <h2 className="text-xl font-bold">Medical Translation</h2>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm overflow-hidden bg-white border-2" style={{ borderColor: '#76C5E0' }}>
+                <Languages className="h-6 w-6" style={{ color: '#113B5C' }} />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight text-white">Medical Translation</h2>
+                <p className="text-xs font-medium uppercase tracking-wide" style={{ color: '#76C5E0' }}>Voice Translation</p>
+              </div>
             </div>
             <button
               onClick={onClose}
-              className="text-white hover:text-gray-200 transition-colors"
+              className="text-white hover:text-gray-200 transition-colors p-2 rounded-lg hover:bg-white hover:bg-opacity-10"
             >
               ✕
             </button>
           </div>
           
           {/* Language Selector */}
-          <div className="mt-4 flex items-center space-x-4">
+          <div className="mt-6 flex items-center space-x-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium mb-2">From</label>
+              <label className="block text-sm font-medium mb-2 text-white">From</label>
               <select
                 value={sourceLanguage}
                 onChange={(e) => setSourceLanguage(e.target.value)}
-                className="w-full p-2 rounded-lg text-gray-900"
+                className="w-full p-3 rounded-lg text-gray-900 border-2 transition-colors"
+                style={{ borderColor: '#76C5E0' }}
                 disabled={isLiveMode}
               >
                 {SUPPORTED_LANGUAGES.map(lang => (
@@ -183,18 +189,29 @@ export default function VoiceTranslationWidget({
             
             <button
               onClick={swapLanguages}
-              className="p-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors"
+              className="p-3 rounded-lg transition-colors text-white border-2"
+              style={{ 
+                backgroundColor: 'rgba(255, 255, 255, 0.2)', 
+                borderColor: '#76C5E0'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+              }}
               disabled={isLiveMode}
             >
               ↔
             </button>
             
             <div className="flex-1">
-              <label className="block text-sm font-medium mb-2">To</label>
+              <label className="block text-sm font-medium mb-2 text-white">To</label>
               <select
                 value={targetLanguage}
                 onChange={(e) => setTargetLanguage(e.target.value)}
-                className="w-full p-2 rounded-lg text-gray-900"
+                className="w-full p-3 rounded-lg text-gray-900 border-2 transition-colors"
+                style={{ borderColor: '#76C5E0' }}
                 disabled={isLiveMode}
               >
                 {SUPPORTED_LANGUAGES.map(lang => (
@@ -211,17 +228,26 @@ export default function VoiceTranslationWidget({
         <div className="p-6 space-y-6">
           {/* Current Translation */}
           {currentTranslation && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-medium text-black mb-2">Current Translation</h3>
-              <p className="text-black">{currentTranslation}</p>
+            <div className="bg-white rounded-lg p-4 border-2" style={{ borderColor: '#76C5E0' }}>
+              <h3 className="font-medium mb-2" style={{ color: '#113B5C' }}>Current Translation</h3>
+              <p className="text-gray-900">{currentTranslation}</p>
               <div className="flex items-center space-x-2 mt-2">
                 <button
                   onClick={() => setIsMuted(!isMuted)}
-                  className="p-1 text-gray-500 hover:text-gray-700"
+                  className="p-1 rounded-lg transition-colors"
+                  style={{ color: '#76C5E0' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#F8FBFC';
+                    e.currentTarget.style.color = '#113B5C';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#76C5E0';
+                  }}
                 >
                   {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                 </button>
-                <span className="text-xs text-gray-500">Audio playback</span>
+                <span className="text-xs" style={{ color: '#76C5E0' }}>Audio playback</span>
               </div>
             </div>
           )}
@@ -233,11 +259,20 @@ export default function VoiceTranslationWidget({
                 <button
                   onClick={isListening ? stopListening : startListening}
                   disabled={!isInitialized || isTranslating}
-                  className={`p-4 rounded-full transition-colors ${
-                    isListening
-                      ? 'bg-red-500 text-white hover:bg-red-600'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
-                  } ${(!isInitialized || isTranslating) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-4 rounded-full transition-colors text-white ${
+                    (!isInitialized || isTranslating) ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  style={{
+                    backgroundColor: isListening ? '#dc2626' : '#113B5C'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isInitialized || isTranslating) return;
+                    e.currentTarget.style.backgroundColor = isListening ? '#b91c1c' : '#0F2A3F';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isInitialized || isTranslating) return;
+                    e.currentTarget.style.backgroundColor = isListening ? '#dc2626' : '#113B5C';
+                  }}
                 >
                   {isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
                 </button>
@@ -245,7 +280,19 @@ export default function VoiceTranslationWidget({
                 <button
                   onClick={startLiveTranslation}
                   disabled={!isInitialized}
-                  className="flex items-center space-x-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center space-x-2 px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ 
+                    backgroundColor: '#76C5E0', 
+                    color: '#113B5C'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isInitialized) return;
+                    e.currentTarget.style.backgroundColor = '#5BB5D1';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isInitialized) return;
+                    e.currentTarget.style.backgroundColor = '#76C5E0';
+                  }}
                 >
                   <Phone className="h-5 w-5" />
                   <span>Start Live Translation</span>
@@ -254,7 +301,17 @@ export default function VoiceTranslationWidget({
             ) : (
               <button
                 onClick={stopLiveTranslation}
-                className="flex items-center space-x-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                className="flex items-center space-x-2 px-6 py-3 rounded-lg transition-colors"
+                style={{ 
+                  backgroundColor: '#dc2626', 
+                  color: 'white'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#b91c1c';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#dc2626';
+                }}
               >
                 <PhoneOff className="h-5 w-5" />
                 <span>Stop Live Translation</span>
@@ -265,23 +322,23 @@ export default function VoiceTranslationWidget({
           {/* Translation History */}
           {translationHistory.length > 0 && (
             <div>
-              <h3 className="font-medium text-black mb-3">Recent Translations</h3>
+              <h3 className="font-medium mb-3" style={{ color: '#113B5C' }}>Recent Translations</h3>
               <div className="space-y-3 max-h-48 overflow-y-auto">
                 {translationHistory.map((item) => (
-                  <div key={item.id} className="bg-gray-50 rounded-lg p-3">
+                  <div key={item.id} className="bg-white rounded-lg p-3 border-2" style={{ borderColor: '#76C5E0' }}>
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs" style={{ color: '#76C5E0' }}>
                         {item.timestamp.toLocaleTimeString()}
                       </span>
-                      <span className="text-xs text-green-600">
+                      <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: '#F8FBFC', color: '#113B5C' }}>
                         {Math.round(item.confidence * 100)}% confidence
                       </span>
                     </div>
-                    <p className="text-sm text-black mb-1">
-                      <strong>Original:</strong> {item.original}
+                    <p className="text-sm text-gray-900 mb-1">
+                      <strong style={{ color: '#113B5C' }}>Original:</strong> {item.original}
                     </p>
-                    <p className="text-sm text-black">
-                      <strong>Translated:</strong> {item.translated}
+                    <p className="text-sm text-gray-900">
+                      <strong style={{ color: '#113B5C' }}>Translated:</strong> {item.translated}
                     </p>
                   </div>
                 ))}
@@ -292,21 +349,21 @@ export default function VoiceTranslationWidget({
           {/* Status */}
           <div className="text-center">
             {isTranslating && (
-              <div className="flex items-center justify-center space-x-2 text-blue-600">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span>Translating...</span>
+              <div className="flex items-center justify-center space-x-2" style={{ color: '#113B5C' }}>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2" style={{ borderColor: '#113B5C' }}></div>
+                <span className="font-medium">Translating...</span>
               </div>
             )}
             {isLiveMode && (
-              <div className="flex items-center justify-center space-x-2 text-green-600">
-                <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
-                <span>Live translation active</span>
+              <div className="flex items-center justify-center space-x-2" style={{ color: '#76C5E0' }}>
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#76C5E0' }}></div>
+                <span className="font-medium">Live translation active</span>
               </div>
             )}
             {!isInitialized && (
-              <div className="flex items-center justify-center space-x-2 text-orange-600">
-                <div className="w-2 h-2 bg-orange-600 rounded-full"></div>
-                <span>Translation service loading...</span>
+              <div className="flex items-center justify-center space-x-2" style={{ color: '#76C5E0' }}>
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#76C5E0' }}></div>
+                <span className="font-medium">Translation service loading...</span>
               </div>
             )}
           </div>

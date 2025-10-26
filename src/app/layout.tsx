@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MediMoji - AI Medical Assistant",
+  title: "MediMoji - AI Clinical Assistant",
   description: "AI-powered medical assistant designed to streamline clinical workflows and enhance patient care for healthcare professionals",
 };
 

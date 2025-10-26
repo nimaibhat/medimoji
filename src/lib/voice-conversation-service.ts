@@ -68,9 +68,9 @@ export class VoiceConversationService {
     } catch (error) {
       console.error('Error creating voice translation session:', error);
       console.error('Error details:', {
-        code: error.code,
-        message: error.message,
-        stack: error.stack
+        code: (error as Error)?.code,
+        message: (error as Error)?.message,
+        stack: (error as Error)?.stack
       });
       throw new Error('Failed to create voice translation session');
     }
@@ -189,11 +189,12 @@ export class VoiceConversationService {
    * Transcribe conversation and generate medical report
    */
   static async transcribeAndGenerateReport(conversationId: string): Promise<void> {
+    let conversation;
     try {
       console.log('Starting transcription and report generation for:', conversationId);
       
       // Get the conversation
-      const conversation = await this.getConversation(conversationId);
+      conversation = await this.getConversation(conversationId);
       if (!conversation) {
         throw new Error('Conversation not found');
       }
@@ -259,21 +260,21 @@ export class VoiceConversationService {
              // Generate HIPAA-compliant fallback report
              const fallbackSummary = `Medical Consultation Report
 
-Patient ID: ${conversation.patientInfo.patientId || 'Not provided'}
-Date: ${conversation.patientInfo.date}
-Time: ${conversation.patientInfo.time}
-Doctor: ${conversation.patientInfo.doctorName}
-Visit Type: ${conversation.patientInfo.visitType}
+Patient ID: ${conversation?.patientInfo?.patientId || 'Not provided'}
+Date: ${conversation?.patientInfo?.date || 'Not available'}
+Time: ${conversation?.patientInfo?.time || 'Not available'}
+Doctor: ${conversation?.patientInfo?.doctorName || 'Not available'}
+Visit Type: ${conversation?.patientInfo?.visitType || 'Not available'}
 
 Session Summary:
-- Total exchanges: ${conversation.sessionInfo.exchangeCount}
-- Language pairs used: ${conversation.sessionInfo.languagePairs.join(', ')}
-- Session duration: ${Math.round(conversation.sessionInfo.totalDuration / 60)} minutes
-- Session status: ${conversation.metadata.status}
+- Total exchanges: ${conversation?.sessionInfo?.exchangeCount || 0}
+- Language pairs used: ${conversation?.sessionInfo?.languagePairs?.join(', ') || 'Not available'}
+- Session duration: ${conversation?.sessionInfo?.totalDuration ? Math.round(conversation.sessionInfo.totalDuration / 60) : 0} minutes
+- Session status: ${conversation?.metadata?.status || 'Unknown'}
 
 Note: Audio transcription failed due to technical issues. This report is based on session metadata only.
 
-Additional Notes: ${conversation.patientInfo.notes || 'None provided'}
+Additional Notes: ${conversation?.patientInfo?.notes || 'None provided'}
 
 This report is HIPAA compliant and does not contain personally identifiable information.`;
 

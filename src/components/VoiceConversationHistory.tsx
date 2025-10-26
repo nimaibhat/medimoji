@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, Clock, User, Play, Download, Archive, Eye, Volume2 } from 'lucide-react';
 import { useVoiceConversation } from '@/contexts/VoiceConversationContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { VoiceConversationSummary } from '@/types/voice-conversation';
+import { VoiceTranslationSummary } from '@/types/voice-conversation';
 
 export default function VoiceConversationHistory() {
   const { user } = useAuth();
@@ -16,7 +16,7 @@ export default function VoiceConversationHistory() {
     error 
   } = useVoiceConversation();
 
-  const [selectedConversation, setSelectedConversation] = useState<VoiceConversationSummary | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<VoiceTranslationSummary | null>(null);
 
   useEffect(() => {
     if (user?.uid) {

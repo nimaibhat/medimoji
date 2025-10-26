@@ -535,7 +535,7 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
       {showDebugInfo && (
         <Html position={[0, 2, 0]} center>
           <div className="bg-black/80 text-white p-2 rounded text-xs max-w-xs">
-            <div className="font-bold mb-1">Debug Mode (Press 'D' to toggle)</div>
+            <div className="font-bold mb-1">Debug Mode (Press &apos;D&apos; to toggle)</div>
             {lastClickCoords ? (
               <div>
                 <div>X: {lastClickCoords.x.toFixed(2)}</div>

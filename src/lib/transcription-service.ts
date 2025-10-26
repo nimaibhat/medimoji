@@ -106,7 +106,7 @@ export class TranscriptionService {
    */
   static async generateConversationSummary(
     transcripts: Array<{ timestamp: string; language: string; text: string }>,
-    patientInfo: any
+    patientInfo: { name: string; age: number; gender: string; medicalHistory: string }
   ): Promise<string> {
     try {
       // Combine all transcripts into a single text

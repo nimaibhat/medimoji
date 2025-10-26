@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Mic, Brain, AlertCircle, ExternalLink, Languages, Bone, Volume2 } from 'lucide-react';
+import { Send, Paperclip, Mic, Brain, AlertCircle, ExternalLink } from 'lucide-react';
+import CustomIcon from './CustomIcon';
 
 // Speech Recognition types
 declare global {
@@ -60,15 +61,15 @@ interface Message {
   painReport?: {
     painPoints: Array<{
       id: string;
-      x: number;
-      y: number;
+      position: [number, number, number];
       intensity: number;
       type: string;
       size: number;
       timestamp: Date;
-      bodyView: string;
+      bodyView: 'front' | 'back';
+      bodyPart?: string;
     }>;
-    bodyView: string;
+    bodyView: 'front' | 'back';
     timestamp: Date;
     analysis: {
       content: string;
@@ -80,13 +81,43 @@ interface ChatInterfaceProps {
   selectedAgent: string;
 }
 
-const predefinedPrompts = [
-  "Send an email to rsmith@gmail.com about the appointment tomorrow at 2 PM",
-  "Draw a medical illustration on how to wash your hands",
-  "Create a surgical procedure illustration for appendectomy",
-  "What are the latest treatment guidelines for hypertension?",
-  "Generate a patient-friendly diagram explaining diabetes",
-  "Draw your pain on the body diagram"
+const medicalSuggestions = [
+  {
+    icon: "schedule-email",
+    title: "Schedule Email",
+    description: "Send appointment reminders",
+    prompt: "Send an email to rsmith@gmail.com about the appointment tomorrow at 2 PM"
+  },
+  {
+    icon: "medical-illustration",
+    title: "Medical Illustration",
+    description: "Create visual guides",
+    prompt: "Draw a medical illustration on how to wash your hands"
+  },
+  {
+    icon: "surgical-procedure",
+    title: "Surgical Procedure",
+    description: "Document procedures",
+    prompt: "Create a surgical procedure illustration for appendectomy"
+  },
+  {
+    icon: "treatment-guidelines",
+    title: "Treatment Guidelines",
+    description: "Latest protocols",
+    prompt: "What are the latest treatment guidelines for hypertension?"
+  },
+  {
+    icon: "patient-education",
+    title: "Patient Education",
+    description: "Visual explanations",
+    prompt: "Generate a patient-friendly diagram explaining diabetes"
+  },
+  {
+    icon: "medical-records",
+    title: "Medical Records",
+    description: "Patient documentation",
+    prompt: "Generate a comprehensive medical record summary for patient consultation"
+  }
 ];
 
 export default function ChatInterface({ selectedAgent }: ChatInterfaceProps) {
@@ -559,7 +590,23 @@ export default function ChatInterface({ selectedAgent }: ChatInterfaceProps) {
     setShowIllustrationTranslator(true);
   };
 
-  const handlePainReport = (painReport: any) => {
+  const handlePainReport = (painReport: {
+    painPoints: Array<{
+      id: string;
+      position: [number, number, number];
+      intensity: number;
+      type: string;
+      size: number;
+      timestamp: Date;
+      bodyView: 'front' | 'back';
+      bodyPart?: string;
+    }>;
+    bodyView: 'front' | 'back';
+    timestamp: Date;
+    analysis: {
+      content: string;
+    };
+  }) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       content: `I've drawn my pain on the body diagram. Here's my pain report:`,
@@ -573,7 +620,7 @@ export default function ChatInterface({ selectedAgent }: ChatInterfaceProps) {
 
     // Use the actual LLM analysis content directly
     const analysis = painReport.analysis;
-    const bodyParts = Array.from(new Set(painReport.painPoints.map((point: any) => point.bodyPart).filter(Boolean)));
+    const bodyParts = Array.from(new Set(painReport.painPoints.map(point => point.bodyView).filter(Boolean)));
     
     // Debug: Log the analysis object to see what we're working with
     console.log('=== CHAT INTERFACE ANALYSIS DEBUG ===');
@@ -618,61 +665,76 @@ ${analysis.content || 'Analysis content not available'}
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
-      {/* Header */}
-      <div className="px-6 pt-6 pb-4">
+      {/* Professional Medical Header */}
+      <div className="px-6 pt-6 pb-4 border-b border-blue-200 bg-white">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Brain className="h-6 w-6 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm overflow-hidden bg-white border-2" style={{ borderColor: '#113B5C' }}>
+              <img 
+                src="/Medimoji_Logo-removebg-preview.png" 
+                alt="MediMoji Logo" 
+                className="h-16 w-16 object-contain"
+              />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">MediMoji</h1>
-              <p className="text-gray-600 text-sm">AI-powered medical assistant for healthcare professionals</p>
+              <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#113B5C' }}>MediMoji</h1>
+              <p className="text-xs font-medium uppercase tracking-wide" style={{ color: '#76C5E0' }}>Clinical Assistant</p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-              ☑ Curie
-            </span>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg border" style={{ backgroundColor: '#F8FBFC', borderColor: '#76C5E0' }}>
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#76C5E0' }}></div>
+              <span className="text-xs font-medium" style={{ color: '#113B5C' }}>Curie</span>
           </div>
         </div>
-        
-        {/* Agent Tag */}
-        <div className="mb-6">
-          <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gray-800 text-white">
-            {selectedAgent === 'assistant' ? 'General Assistant' : selectedAgent.charAt(0).toUpperCase() + selectedAgent.slice(1)}
-          </span>
         </div>
       </div>
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto px-6 pb-4">
         {messages.length === 0 || !messages.some(msg => msg.role === 'user') ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4">
-              <Brain className="h-8 w-8 text-white" />
+          <div className="flex flex-col items-center justify-center h-full px-6">
+            {/* Refined Header */}
+            <div className="text-center mb-8">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm overflow-hidden bg-white border-2" style={{ borderColor: '#113B5C' }}>
+                <img 
+                  src="/Medimoji_Logo-removebg-preview.png" 
+                  alt="MediMoji Logo" 
+                  className="h-20 w-20 object-contain"
+                />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">MediMoji</h2>
-            <p className="text-gray-600 mb-6 max-w-md">An AI-powered medical assistant designed to streamline clinical workflows and enhance patient care</p>
-            
-            {/* Category Tag */}
-            <div className="mb-6">
-              <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gray-800 text-white">
-                Medical
-              </span>
+              <h2 className="text-xl font-semibold mb-2 tracking-tight" style={{ color: '#113B5C' }}>Curie</h2>
+              <p className="text-sm leading-relaxed" style={{ color: '#76C5E0' }}>Streamline your workflow with intelligent medical assistance. Select a task below or type your request.</p>
             </div>
             
-            {/* Suggested Prompts */}
-            <div className="w-full max-w-2xl space-y-3">
-              {predefinedPrompts.map((prompt, index) => (
+            {/* Compact Medical Suggestion Cards */}
+            <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {medicalSuggestions.map((suggestion, index) => (
                 <button
                   key={index}
-                  onClick={() => handlePromptClick(prompt)}
-                  className="w-full text-left p-4 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors shadow-sm hover:shadow-md"
+                  onClick={() => handlePromptClick(suggestion.prompt)}
+                  className="group text-left p-4 bg-white hover:bg-slate-50 rounded-lg border border-slate-200 transition-all duration-200 shadow-sm hover:shadow-md hover:border-slate-300"
                 >
-                  <p className="text-gray-700 text-sm">{prompt}</p>
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <CustomIcon 
+                        name={suggestion.icon as 'schedule-email' | 'medical-illustration' | 'surgical-procedure' | 'treatment-guidelines' | 'patient-education' | 'medical-records'} 
+                        size="sm" 
+                        className="text-slate-600 group-hover:text-slate-800 transition-colors duration-200" 
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-slate-900 mb-1 tracking-tight">{suggestion.title}</h3>
+                      <p className="text-xs text-slate-600 leading-relaxed">{suggestion.description}</p>
+                    </div>
+                  </div>
                 </button>
               ))}
+            </div>
+
+            {/* Compact Footer Hint */}
+            <div className="mt-6 text-center">
+              <p className="text-xs text-slate-500 font-medium">Start by selecting a suggestion above or typing your medical query below</p>
             </div>
           </div>
         ) : (
@@ -765,88 +827,182 @@ ${analysis.content || 'Analysis content not available'}
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="px-6 py-4 bg-white border-t border-gray-200">
-        <form onSubmit={handleSubmit} className="flex items-center space-x-3">
+      {/* Professional Medical Input Area */}
+      <div className="px-6 py-4 bg-white border-t border-slate-200">
+        {/* Medical Tools Section */}
+        <div className="flex items-center justify-center space-x-4 mb-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-medium uppercase tracking-wide" style={{ color: '#76C5E0' }}>Medical Tools</span>
+            <div className="h-px flex-1 max-w-20" style={{ backgroundColor: '#76C5E0' }}></div>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-center space-x-6 mb-4">
+          {/* Voice Translation Tool */}
+          <button
+            type="button"
+            onClick={() => setShowVoiceDubbing(true)}
+            className="group flex flex-col items-center space-y-2 p-4 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200"
+            style={{ backgroundColor: 'transparent' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#F0F9FF';
+              const iconBg = e.currentTarget.querySelector('.icon-bg') as HTMLElement;
+              if (iconBg) iconBg.style.backgroundColor = '#113B5C';
+              const icon = e.currentTarget.querySelector('.tool-icon') as HTMLElement;
+              if (icon) icon.style.color = '#FFFFFF';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              const iconBg = e.currentTarget.querySelector('.icon-bg') as HTMLElement;
+              if (iconBg) iconBg.style.backgroundColor = '#113B5C';
+              const icon = e.currentTarget.querySelector('.tool-icon') as HTMLElement;
+              if (icon) icon.style.color = '#76C5E0';
+            }}
+            title="Voice Translation - Doctor-Patient Communication"
+          >
+            <div className="icon-bg w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm" style={{ backgroundColor: '#113B5C' }}>
+              <CustomIcon name="voice-translation" size="md" className="tool-icon text-[#76C5E0]" />
+            </div>
+            <span className="text-xs font-semibold" style={{ color: '#113B5C' }}>Voice Translation</span>
+          </button>
+
+          {/* Pain Assessment Tool */}
+          <button
+            type="button"
+            onClick={() => setShowPainDrawingTool(true)}
+            className="group flex flex-col items-center space-y-2 p-4 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200"
+            style={{ backgroundColor: 'transparent' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#F0F9FF';
+              const iconBg = e.currentTarget.querySelector('.icon-bg') as HTMLElement;
+              if (iconBg) iconBg.style.backgroundColor = '#113B5C';
+              const icon = e.currentTarget.querySelector('.tool-icon') as HTMLElement;
+              if (icon) icon.style.color = '#FFFFFF';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              const iconBg = e.currentTarget.querySelector('.icon-bg') as HTMLElement;
+              if (iconBg) iconBg.style.backgroundColor = '#113B5C';
+              const icon = e.currentTarget.querySelector('.tool-icon') as HTMLElement;
+              if (icon) icon.style.color = '#76C5E0';
+            }}
+            title="Pain Assessment - Visual pain mapping"
+          >
+            <div className="icon-bg w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm" style={{ backgroundColor: '#113B5C' }}>
+              <CustomIcon name="3d-body-model" size="md" className="tool-icon text-[#76C5E0]" />
+            </div>
+            <span className="text-xs font-semibold" style={{ color: '#113B5C' }}>Pain Assessment</span>
+          </button>
+        </div>
+
+        {/* Professional Medical Input Section */}
+        <div className="relative">
+          <form onSubmit={handleSubmit} className="relative">
+            {/* Main Input Container */}
+            <div className="relative bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+              {/* Input Field */}
+              <div className="flex items-center px-6 py-4">
           <div className="flex-1 relative">
-            <div className="flex items-center bg-gray-100 rounded-2xl px-4 py-3 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
               <input
                 type="text"
                 value={inputValue}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Type a message..."
-                className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-sm"
+                    placeholder="Ask Curie about medical procedures, patient care, or clinical guidelines..."
+                    className="w-full bg-transparent border-none outline-none text-base font-medium placeholder-slate-400 resize-none"
+                    style={{ color: '#113B5C' }}
                 disabled={isLoading}
               />
-              <div className="flex items-center space-x-2 ml-2">
+                  
+                  {/* Character Count (if needed) */}
+                  {inputValue.length > 0 && (
+                    <div className="absolute -bottom-6 right-0 text-xs text-slate-400">
+                      {inputValue.length} characters
+                    </div>
+                  )}
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex items-center space-x-1 ml-4">
+                  {/* Attachment Button */}
                 <button
                   type="button"
-                  className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="p-2.5 rounded-xl transition-all duration-200 hover:bg-slate-100 group"
+                    title="Attach medical documents or images"
                 >
-                  <Paperclip className="h-4 w-4" />
+                    <Paperclip className="h-5 w-5 text-slate-500 group-hover:text-slate-700" strokeWidth={1.5} />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowPainDrawingTool(true)}
-                  className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
-                  title="Draw Your Pain"
-                >
-                  <Bone className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowVoiceDubbing(true)}
-                  className="p-1.5 text-gray-400 hover:text-purple-600 transition-colors"
-                  title="Voice Translation - Doctor-Patient Communication"
-                >
-                  <Volume2 className="h-4 w-4" />
-                </button>
+                  
+                  {/* Voice Input Button */}
                 <button
                   type="button"
                   onClick={handleSpeechToText}
                   disabled={!speechSupported || isLoading}
-                  className={`p-1.5 transition-colors ${
+                    className={`p-2.5 rounded-xl transition-all duration-200 ${
                     isListening 
-                      ? 'text-red-500 hover:text-red-600' 
-                      : speechSupported 
-                        ? 'text-gray-400 hover:text-gray-600' 
-                        : 'text-gray-300 cursor-not-allowed'
-                  }`}
-                  title={speechSupported ? (isListening ? 'Stop listening' : 'Start voice input') : 'Speech recognition not supported'}
-                >
-                  <Mic className={`h-4 w-4 ${isListening ? 'animate-pulse' : ''}`} />
+                        ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                        : 'hover:bg-slate-100 text-slate-500 hover:text-slate-700'
+                    } ${!speechSupported ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    title={speechSupported ? (isListening ? 'Stop voice input' : 'Start voice input') : 'Speech recognition not supported'}
+                  >
+                    <Mic className={`h-5 w-5 ${isListening ? 'animate-pulse' : ''}`} strokeWidth={1.5} />
+                  </button>
+                  
+                  {/* Send Button */}
+                  <button
+                    type="submit"
+                    disabled={!inputValue.trim() || isLoading}
+                    className={`p-3 rounded-xl transition-all duration-200 shadow-sm ${
+                      inputValue.trim() && !isLoading
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
+                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <Send className="h-5 w-5" strokeWidth={1.5} />
                 </button>
               </div>
             </div>
             
-            {/* Agent Suggestions */}
+              {/* Input Footer */}
+              <div className="px-6 py-3 bg-slate-50 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 text-xs text-slate-500">
+                    <span className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span>Curie is online</span>
+                    </span>
+                    <span>Press Enter to send</span>
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    HIPAA compliant • Secure
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Agent Suggestions Dropdown */}
             {agentSuggestions.length > 0 && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-xl shadow-lg z-10">
-                {agentSuggestions.map((suggestion) => (
+              <div className="absolute bottom-full left-0 right-0 mb-3 bg-white border border-slate-200 rounded-xl shadow-xl z-20 overflow-hidden">
+                <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
+                  <span className="text-xs font-medium text-slate-600 uppercase tracking-wide">Suggested Agents</span>
+                </div>
+                {agentSuggestions.map((suggestion, index) => (
                   <button
                     key={suggestion}
                     onClick={() => handleSuggestionClick(suggestion)}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 first:rounded-t-xl last:rounded-b-xl transition-colors"
+                    className="w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors duration-200 border-b border-slate-100 last:border-b-0"
                   >
-                    <span className="text-blue-600 text-sm">@{suggestion}</span>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm text-slate-700 font-medium">@{suggestion}</span>
+                    </div>
                   </button>
                 ))}
               </div>
             )}
-          </div>
-          <button
-            type="submit"
-            disabled={!inputValue.trim() || isLoading}
-            className="p-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-          >
-            <Send className="h-5 w-5" />
-          </button>
         </form>
+        </div>
         
-        <p className="mt-3 text-xs text-gray-500 text-center">
-          Curie AI is in beta. Please avoid sharing sensitive information.
-        </p>
       </div>
 
       {/* Voice Translation Widget */}
@@ -857,6 +1013,7 @@ ${analysis.content || 'Analysis content not available'}
           medicalContext="general"
         />
       )}
+
 
       {/* Medical Illustration Translator */}
       {showIllustrationTranslator && selectedImageForTranslation && (

@@ -186,6 +186,14 @@ export default function MockVoiceDubbingComponent() {
 
   // Play audio
   const playAudio = useCallback((url: string) => {
+    // Stop any other audio playing in the app
+    const allAudioElements = document.querySelectorAll('audio');
+    allAudioElements.forEach(audio => {
+      if (!audio.paused) {
+        audio.pause();
+      }
+    });
+
     if (audioRef.current) {
       audioRef.current.pause();
     }
@@ -196,8 +204,15 @@ export default function MockVoiceDubbingComponent() {
     audio.onplay = () => setIsPlaying(true);
     audio.onpause = () => setIsPlaying(false);
     audio.onended = () => setIsPlaying(false);
+    audio.onerror = () => {
+      console.error('Audio playback error');
+      setIsPlaying(false);
+    };
     
-    audio.play();
+    audio.play().catch(error => {
+      console.error('Error playing audio:', error);
+      setIsPlaying(false);
+    });
   }, []);
 
   // Download audio

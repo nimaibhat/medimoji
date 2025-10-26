@@ -443,8 +443,25 @@ export default function VoiceDubbingComponent() {
     poll();
   }, [targetLanguage, isContinuousMode]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
+
   // Play audio
   const playAudio = useCallback((url: string) => {
+    // Stop any other audio playing in the app
+    const allAudioElements = document.querySelectorAll('audio');
+    allAudioElements.forEach(audio => {
+      if (!audio.paused) {
+        audio.pause();
+      }
+    });
+
     if (audioRef.current) {
       audioRef.current.pause();
     }
@@ -455,8 +472,15 @@ export default function VoiceDubbingComponent() {
     audio.onplay = () => setIsPlaying(true);
     audio.onpause = () => setIsPlaying(false);
     audio.onended = () => setIsPlaying(false);
+    audio.onerror = () => {
+      console.error('Audio playback error');
+      setIsPlaying(false);
+    };
     
-    audio.play();
+    audio.play().catch(error => {
+      console.error('Error playing audio:', error);
+      setIsPlaying(false);
+    });
   }, []);
 
   // Download audio
@@ -488,7 +512,7 @@ export default function VoiceDubbingComponent() {
               The dubbed audio will include a subtle ElevenLabs watermark to identify the service used.
             </p>
             <p className="text-blue-700 text-sm">
-              This watermark is barely noticeable and doesn't affect the translation quality.
+              This watermark is barely noticeable and doesn&apos;t affect the translation quality.
             </p>
           </div>
 
@@ -574,7 +598,7 @@ export default function VoiceDubbingComponent() {
             {isContinuousMode && (
               <p className="text-sm text-gray-600 mt-2">
                 💡 In continuous mode, each translation will be added to the current conversation. 
-                Click "End & Save Conversation" when the consultation is complete.
+                Click &quot;End & Save Conversation&quot; when the consultation is complete.
               </p>
             )}
           </div>
@@ -588,10 +612,10 @@ export default function VoiceDubbingComponent() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <h3 className="font-semibold text-blue-800 mb-2">Microphone Permission Required</h3>
             <p className="text-blue-700 text-sm mb-2">
-              This feature requires microphone access. If you see a permission prompt, please click "Allow".
+              This feature requires microphone access. If you see a permission prompt, please click &quot;Allow&quot;.
             </p>
             <p className="text-blue-700 text-sm">
-              If permission was denied, click the microphone icon in your browser's address bar and set it to "Allow".
+              If permission was denied, click the microphone icon in your browser&apos;s address bar and set it to &quot;Allow&quot;.
             </p>
           </div>
           

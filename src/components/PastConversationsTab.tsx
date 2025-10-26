@@ -1,12 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Play, Download, Archive, Eye, Volume2, ArrowLeft, MessageSquare } from 'lucide-react';
-import { useVoiceConversation } from '@/contexts/VoiceConversationContext';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { VoiceTranslationSummary, VoiceTranslation } from '@/types/voice-conversation';
 import { VoiceConversationService } from '@/lib/voice-conversation-service';
+import { VoiceTranslationSummary } from '@/types/voice-conversation';
 import ConversationPlayer from './ConversationPlayer';
+import { 
+  User, 
+  Calendar, 
+  Clock, 
+  MessageSquare, 
+  Languages, 
+  CheckCircle, 
+  AlertCircle,
+  Eye,
+  ArrowLeft,
+  Loader2,
+  RefreshCw
+} from 'lucide-react';
 
 interface PastConversationsTabProps {
   onBack: () => void;
@@ -14,259 +25,250 @@ interface PastConversationsTabProps {
 
 export default function PastConversationsTab({ onBack }: PastConversationsTabProps) {
   const { user } = useAuth();
-  const { 
-    conversations, 
-    loadConversations, 
-    archiveConversation,
-    isLoading,
-    error 
-  } = useVoiceConversation();
-
+  const [conversations, setConversations] = useState<VoiceTranslationSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedConversation, setSelectedConversation] = useState<VoiceTranslationSummary | null>(null);
-  const [playingConversation, setPlayingConversation] = useState<VoiceTranslation | null>(null);
-  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+  const [fullConversation, setFullConversation] = useState<VoiceTranslation | null>(null);
+  const [loadingConversation, setLoadingConversation] = useState(false);
 
   useEffect(() => {
-    if (user?.uid) {
-      loadConversations(user.uid);
+    if (user) {
+      loadConversations();
     }
-  }, [user?.uid, loadConversations]);
+  }, [user]);
 
-  const handlePlaySession = async (conversationId: string) => {
+  const loadConversations = async () => {
     try {
-      setIsLoadingConversation(true);
-      const fullConversation = await VoiceConversationService.getConversationForPlayback(conversationId);
-      if (fullConversation) {
-        setPlayingConversation(fullConversation);
-      } else {
-        console.error('Failed to load conversation for playback');
-      }
-    } catch (error) {
-      console.error('Error loading conversation:', error);
+      setLoading(true);
+      setError(null);
+      const data = await VoiceConversationService.getDoctorConversations(user!.uid);
+      setConversations(data);
+    } catch (err) {
+      console.error('Error loading conversations:', err);
+      setError('Failed to load conversations');
     } finally {
-      setIsLoadingConversation(false);
+      setLoading(false);
     }
   };
 
-  const handleArchiveConversation = async (conversationId: string) => {
-    if (confirm('Are you sure you want to archive this conversation?')) {
-      try {
-        await archiveConversation(conversationId);
-      } catch (err) {
-        console.error('Failed to archive conversation:', err);
+  const handleViewConversation = async (conversation: VoiceTranslationSummary) => {
+    try {
+      setLoadingConversation(true);
+      const fullConv = await VoiceConversationService.getConversation(conversation.id);
+      if (fullConv) {
+        setFullConversation(fullConv);
+        setSelectedConversation(conversation);
       }
+    } catch (err) {
+      console.error('Error loading conversation:', err);
+      setError('Failed to load conversation details');
+    } finally {
+      setLoadingConversation(false);
     }
+  };
+
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    return minutes > 0 ? `${minutes}m` : '<1m';
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString();
+  const formatTimeFromString = (timeString: string) => {
+    const time = new Date(`2000-01-01T${timeString}`);
+    return time.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="h-4 w-4 text-emerald-600" />;
+      case 'active':
+        return <AlertCircle className="h-4 w-4 text-amber-500" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-400" />;
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
       case 'completed':
-        return 'bg-blue-100 text-blue-800';
-      case 'archived':
-        return 'bg-gray-100 text-gray-800';
+        return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+      case 'active':
+        return 'text-amber-700 bg-amber-50 border-amber-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'text-gray-700 bg-gray-50 border-gray-200';
     }
   };
 
-  if (isLoading) {
+  if (selectedConversation && fullConversation) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <span className="ml-4 text-gray-600">Loading conversations...</span>
-      </div>
+      <ConversationPlayer
+        conversation={fullConversation}
+        onClose={() => {
+          setSelectedConversation(null);
+          setFullConversation(null);
+        }}
+      />
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-gray-50">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <MessageSquare className="h-6 w-6 text-blue-600" />
-          <h2 className="text-xl font-bold text-gray-900">Past Conversations</h2>
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={onBack}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900">Patient Conversations</h1>
+              <p className="text-sm text-gray-600">Review past voice translation sessions</p>
+            </div>
+          </div>
+          <button
+            onClick={loadConversations}
+            disabled={loading}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+          </button>
         </div>
-        <button
-          onClick={onBack}
-          className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back</span>
-        </button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        {/* Error Display */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-600">{error}</p>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+              <p className="text-gray-600">Loading conversations...</p>
+            </div>
           </div>
-        )}
-
-        {/* Conversations List */}
-        {conversations.length === 0 ? (
-          <div className="text-center py-12">
-            <Volume2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Past Conversations</h3>
-            <p className="text-gray-500">
-              Your voice translation sessions will appear here once you complete them.
-            </p>
+        ) : error ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
+              <p className="text-gray-900 font-medium mb-2">Unable to load conversations</p>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <button
+                onClick={loadConversations}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-150"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        ) : conversations.length === 0 ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No conversations yet</h3>
+              <p className="text-gray-600">Start a new voice translation session to see it here.</p>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
             {conversations.map((conversation) => (
-              <div key={conversation.id} className="border border-gray-200 rounded-lg p-6 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-blue-100 rounded-full p-3">
-                      <User className="h-6 w-6 text-blue-600" />
+              <div
+                key={conversation.id}
+                className="bg-white rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all duration-200 cursor-pointer group"
+                onClick={() => handleViewConversation(conversation)}
+              >
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="bg-blue-50 rounded-full p-3">
+                        <User className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-150">
+                          {conversation.patientName}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {conversation.doctorName} • {conversation.visitType}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {conversation.patientName}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {conversation.doctorName} • {conversation.visitType}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(conversation.status)}`}>
-                      {conversation.status}
-                    </span>
-                    <div className="flex items-center space-x-1">
-                      <button
-                        onClick={() => setSelectedConversation(conversation)}
-                        className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                        title="View Details"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      {conversation.status !== 'archived' && (
-                        <button
-                          onClick={() => handleArchiveConversation(conversation.id)}
-                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                          title="Archive Conversation"
-                        >
-                          <Archive className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>{formatDate(conversation.date)}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4" />
-                    <span>{conversation.time}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Volume2 className="h-4 w-4" />
-                    <span>{conversation.exchangeCount} exchanges</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4" />
-                    <span>{Math.round(conversation.totalDuration / 60)} min</span>
-                  </div>
-                </div>
-
-                {/* Language Pairs */}
-                {conversation.languagePairs.length > 0 && (
-                  <div className="mt-3">
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-700">Languages:</span>
-                      <div className="flex flex-wrap gap-1">
+                      {getStatusIcon(conversation.status)}
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(conversation.status)}`}>
+                        {conversation.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Calendar className="h-4 w-4" />
+                      <span>{formatDate(conversation.date)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Clock className="h-4 w-4" />
+                      <span>{formatTimeFromString(conversation.time)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <MessageSquare className="h-4 w-4" />
+                      <span>{conversation.exchangeCount} exchanges</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Clock className="h-4 w-4" />
+                      <span>{formatDuration(conversation.totalDuration)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Languages className="h-4 w-4 text-gray-400" />
+                      <div className="flex space-x-1">
                         {conversation.languagePairs.map((pair, index) => (
-                          <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                          <span
+                            key={index}
+                            className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-md"
+                          >
                             {pair}
                           </span>
                         ))}
                       </div>
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewConversation(conversation);
+                      }}
+                      className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors duration-150"
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span>View Details</span>
+                    </button>
                   </div>
-                )}
-
-                {/* Conversation Details Modal */}
-                {selectedConversation?.id === conversation.id && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-gray-800">Conversation Details</h4>
-                      <button
-                        onClick={() => setSelectedConversation(null)}
-                        className="text-gray-400 hover:text-gray-600"
-                      >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Session ID:</span>
-                        <span className="font-medium">{conversation.id}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Created:</span>
-                        <span className="font-medium">{formatDate(conversation.createdAt)} at {formatTime(conversation.createdAt)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Total Duration:</span>
-                        <span className="font-medium">{Math.round(conversation.totalDuration / 60)} minutes</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Exchange Count:</span>
-                        <span className="font-medium">{conversation.exchangeCount}</span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex items-center space-x-2">
-                      <button 
-                        onClick={() => handlePlaySession(conversation.id)}
-                        disabled={isLoadingConversation}
-                        className="flex items-center space-x-1 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
-                      >
-                        <Play className="h-3 w-3" />
-                        <span>{isLoadingConversation ? 'Loading...' : 'Play Session'}</span>
-                      </button>
-                      <button 
-                        onClick={() => handlePlaySession(conversation.id)}
-                        className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
-                      >
-                        <Download className="h-3 w-3" />
-                        <span>Download</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
-
-      {/* Conversation Player Modal */}
-      {playingConversation && (
-        <ConversationPlayer
-          conversation={playingConversation}
-          onClose={() => setPlayingConversation(null)}
-        />
-      )}
     </div>
   );
 }
