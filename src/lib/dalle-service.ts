@@ -1,17 +1,13 @@
 import Replicate from "replicate";
-import { writeFile } from "fs/promises";
-
-const replicate = new Replicate();
-
-
 
 export interface ImageGenerationRequest {
   prompt: string;
-  style?: 'realistic' | 'schematic' | 'patient-friendly' | 'comic';
+  style?: 'realistic' | 'schematic' | 'patient-friendly' | 'comic' | 'cartoon' | 'infographic' | 'pictogram';
   size?: '1024x1024' | '1792x1024' | '1024x1792';
   quality?: 'standard' | 'hd';
   annotations?: boolean;
-  mockImagePath?: string; // Reference or guide image path/url
+  mockImagePath?: string;
+  attemptNumber?: number;
 }
 
 export interface ImageGenerationResponse {
@@ -45,14 +41,7 @@ export class ImagenService {
     }
     
     const userData = userSnap.data();
-    console.log('User data:', userData);
-    console.log('User replicateApiKey:', userData?.replicateApiKey);
-    console.log('Environment REPLICATE_API_KEY:', process.env.REPLICATE_API_KEY);
-    
     const replicateApiKey = userData.replicateApiKey || process.env.REPLICATE_API_KEY;
-    console.log('Final replicateApiKey configured:', !!replicateApiKey);
-    console.log('API key length:', replicateApiKey?.length);
-    
     
     if (!replicateApiKey) {
       throw new Error('User has not configured their Replicate API key. Please add your Replicate API key in settings.');
@@ -63,7 +52,6 @@ export class ImagenService {
 
   async generateImage(request: ImageGenerationRequest): Promise<ImageGenerationResponse> {
     try {
-      // Check if API key is available
       if (!this.apiKey) {
         return {
           success: false,
@@ -71,37 +59,39 @@ export class ImagenService {
         };
       }
 
-      // Enhance the prompt for medical accuracy, including possible mock image
-      const enhancedPrompt = this.enhanceMedicalPrompt(request.prompt, request.style, request.mockImagePath);
+      // Build SHORT, POSITIVE prompt
+      const enhancedPrompt = this.buildTextFreePrompt(
+        request.prompt, 
+        request.style, 
+        request.mockImagePath,
+        request.attemptNumber || 1
+      );
       
-      // Convert size to aspect ratio
       const aspectRatio = this.convertSizeToAspectRatio(request.size);
       
       const input = {
         prompt: enhancedPrompt,
         aspect_ratio: aspectRatio,
+        output_format: "jpg",
         safety_filter_level: "block_medium_and_above"
       };
 
-      // Run Imagen 4 via Replicate
+      console.log('Generating with prompt:', enhancedPrompt);
+      console.log('Input parameters:', input);
+
+      // Run google/imagen-4 using the exact playground format
       const output = await this.replicate.run("google/imagen-4", { input });
-      console.log('Replicate output:', output);
-      console.log('Output type:', typeof output);
-      console.log('Is array:', Array.isArray(output));
       
-      // Replicate returns a ReadableStream or object with url function
-      let imageUrl: string | undefined;
-      if (typeof output === 'object' && output !== null) {
-        if ('url' in output && typeof output.url === 'function') {
-          imageUrl = await output.url();
-        } else if (Array.isArray(output) && output.length > 0) {
-          imageUrl = output[0];
-        } else if (typeof output === 'string') {
-          imageUrl = output;
-        }
+      // Get the image URL using the correct method from playground
+      let imageUrl: string;
+      if (typeof output === 'object' && output !== null && 'url' in output && typeof output.url === 'function') {
+        imageUrl = output.url();
+      } else if (typeof output === 'string') {
+        imageUrl = output;
+      } else {
+        throw new Error('Unexpected output format from Replicate');
       }
-      
-      console.log('Extracted imageUrl:', imageUrl);
+      console.log('Generated imageUrl:', imageUrl);
 
       return {
         success: true,
@@ -118,6 +108,48 @@ export class ImagenService {
     }
   }
 
+  /**
+   * SIMPLIFIED TEXT-FREE PROMPT - Focus on positive instructions
+   */
+  private buildTextFreePrompt(
+    description: string, 
+    style?: string, 
+    mockImagePath?: string,
+    attemptNumber: number = 1
+  ): string {
+    
+    // Get style-specific instructions
+    const styleInstructions = this.getStyleVisualInstructions(style);
+    
+    // Use EXACT playground format for best results
+    const fullPrompt = `The photo: Create a medical cartoon to explain ${description}. Remove all text since they are illiterate and divide up the steps into different panels, emphasizing each action through a cartoon. Keep the images colorful, cheery, and straight to the point.`;
+
+    return fullPrompt;
+  }
+
+  /**
+   * Simplified style instructions - POSITIVE framing only
+   */
+  private getStyleVisualInstructions(style?: string): string {
+    const styleMap: { [key: string]: string } = {
+      'realistic': `Medical illustration with photorealistic detail, clinical quality, accurate anatomy`,
+
+      'schematic': `Technical diagram with clean lines, cross-sections, color-coded components, engineering style`,
+
+      'patient-friendly': `Simple illustration with soft colors, approachable style, easy to understand visuals`,
+
+      'comic': `Colorful illustrated style with sequential panels, friendly and engaging, visual storytelling`,
+
+      'cartoon': `Simplified cartoon style with expressive characters, rounded shapes, visual gestures and emotions, sequential panels showing progression`,
+
+      'infographic': `IKEA-style visual instructions with clean icons, geometric shapes, grid layout, color-coded sections, visual flow indicators`,
+
+      'pictogram': `Universal pictogram style with simplified iconic forms, stick figures, clear silhouettes, high contrast, instant recognition`
+    };
+
+    return styleMap[style || 'comic'] || styleMap['comic'];
+  }
+
   private convertSizeToAspectRatio(size?: string): string {
     switch (size) {
       case '1792x1024':
@@ -130,53 +162,14 @@ export class ImagenService {
     }
   }
 
-  private enhanceMedicalPrompt(prompt: string, style?: string, mockImagePath?: string): string {
-    let enhancedPrompt = prompt;
-    
-    // Add basic medical accuracy
-    enhancedPrompt += ', medically accurate, professional medical illustration';
-    
-    // Add style-specific enhancements
-    switch (style) {
-      case 'realistic':
-        enhancedPrompt += ', photorealistic, clinical quality, detailed, high resolution';
-        break;
-      case 'schematic':
-        enhancedPrompt += ', schematic diagram, clean lines, technical drawing style, labeled diagram';
-        break;
-      case 'patient-friendly':
-        enhancedPrompt += ', simplified, easy to understand, educational, clear and friendly';
-        break;
-      case 'comic':
-        enhancedPrompt += ', cartoon style, colorful, engaging, illustrated';
-        break;
-      default:
-        enhancedPrompt += ', clear medical illustration, professional';
-    }
-    
-    // Force panel-based layout and no text
-    enhancedPrompt += ', create multiple panels showing different aspects, NO TEXT OR WORDS, NO LABELS, NO CAPTIONS, NO WRITING, visual only, panel-based layout';
-    
-    if (mockImagePath) {
-      // Handle multiple reference images
-      const imagePaths = mockImagePath.split(',').map(path => path.trim());
-      if (imagePaths.length === 1) {
-        enhancedPrompt += `. Reference the visual style, composition, and detail level of this image: ${mockImagePath}`;
-      } else {
-        enhancedPrompt += `. Reference the visual style, composition, and detail level of these images: ${imagePaths.join(', ')}`;
-      }
-    }
-    return enhancedPrompt;
-  }
-
   async generateMedicalIllustration(
     description: string, 
-    style: 'realistic' | 'schematic' | 'patient-friendly' | 'comic' = 'comic'
+    style: 'realistic' | 'comic' = 'comic'
   ): Promise<ImageGenerationResponse> {
     return await this.generateImage({
       prompt: description,
       style,
-      size: '1024x1024',
+      size: '1792x1024',
       quality: 'hd'
     });
   }
@@ -189,12 +182,11 @@ export class ImagenService {
     const result = await this.generateImage({
       prompt: description,
       style,
-      size: '1024x1024',
+      size: '1792x1024',
       quality: 'hd',
       mockImagePath
     });
     
-    // Generate captions for the panels if image generation was successful
     if (result.success && result.imageUrl) {
       const captions = await this.generatePanelCaptions(description, result.imageUrl);
       return {
@@ -206,13 +198,48 @@ export class ImagenService {
     return result;
   }
 
+  /**
+   * Generate with retry logic
+   */
+  async generateTextFreeIllustration(
+    description: string,
+    style: 'realistic' | 'comic' | 'cartoon' | 'infographic' | 'pictogram' = 'comic',
+    maxAttempts: number = 3
+  ): Promise<ImageGenerationResponse> {
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      console.log(`Attempt ${attempt}/${maxAttempts} for text-free illustration`);
+      
+      const result = await this.generateImage({
+        prompt: description,
+        style,
+        size: '1792x1024',
+        quality: 'hd',
+        attemptNumber: attempt
+      });
+
+      if (!result.success) {
+        continue;
+      }
+
+      if (attempt === maxAttempts) {
+        console.warn('Max attempts reached, returning best result');
+        return result;
+      }
+    }
+
+    return {
+      success: false,
+      error: 'Failed to generate text-free illustration after multiple attempts'
+    };
+  }
+
   private async generatePanelCaptions(description: string, imageUrl: string): Promise<string> {
     try {
-      // Use OpenAI to analyze the image and generate panel captions
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
