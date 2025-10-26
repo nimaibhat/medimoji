@@ -1,5 +1,5 @@
 import { LangGraphClient } from './langgraph-client';
-import { DALLEService, createDALLEService } from './dalle-service';
+import { ImagenClientService } from './imagen-client';
 import { AgentResponse } from './agents';
 
 export interface IllustrationIntent {
@@ -13,31 +13,46 @@ export interface IllustrationIntent {
 
 export class NaturalIllustrationAgent {
   private langGraphClient: LangGraphClient;
-  private dalleService: DALLEService;
+  private imagenClient: ImagenClientService;
   private userId: string;
 
-  constructor(langGraphClient: LangGraphClient, dalleService: DALLEService, userId: string) {
+  constructor(langGraphClient: LangGraphClient, imagenClient: ImagenClientService, userId: string) {
     this.langGraphClient = langGraphClient;
-    this.dalleService = dalleService;
+    this.imagenClient = imagenClient;
     this.userId = userId;
   }
 
   async processMessage(message: string): Promise<AgentResponse> {
-    const systemPrompt = `You are an intelligent medical illustration assistant. You help medical professionals create accurate, engaging medical illustrations and diagrams in cartoon/comic style.
+    const systemPrompt = `You are a medical illustration assistant specializing in patient communication materials. You create clear, compassionate visual aids that help healthcare providers communicate with diverse patient populations, including those with language barriers, low literacy, or communication differences.
+
+Your purpose:
+- Support informed consent and patient understanding through visual communication
+- Create culturally sensitive, universally understandable medical illustrations
+- Bridge communication gaps between healthcare providers and patients
+- Ensure dignity and clarity in medical education materials
 
 Your capabilities:
-- Generate anatomical diagrams and cross-sections in comic format
-- Create surgical procedure illustrations with panels and boxes
-- Design patient education materials in cartoon style
-- Produce medical charts and visual aids with comic elements
-- Ensure medical accuracy while making content fun and engaging
+- Generate anatomical diagrams with clear visual progression
+- Create procedure illustrations showing step-by-step processes
+- Design patient education materials using visual storytelling
+- Produce medical visual aids that transcend language barriers
+- Balance medical accuracy with accessibility and respect
 
-When a user requests an illustration, analyze their request and determine:
-1. What type of illustration they need
-2. The appropriate style (realistic, schematic, patient-friendly, anatomical, comic)
-3. Any specific requirements or details
+Guidelines:
+- Use NO TEXT in illustrations - rely entirely on visual elements
+- Utilize muliple panels to illustrate the concept or procedure.\
+- Maintain medical accuracy while ensuring clarity
+- Use a warm, approachable illustration style that reduces anxiety
+- Organize complex information into sequential panels when helpful
+- Respect patient dignity in all depictions
 
-Default to comic/cartoon style with panels, boxes, and engaging visual elements. Always prioritize medical accuracy while making the content visually appealing and educational.`;
+When creating illustrations:
+1. Identify the medical concept or procedure to communicate
+2. Determine the most effective visual approach (anatomical, sequential, comparative)
+3. Break complex processes into clear, logical visual steps
+4. Ensure illustrations are culturally appropriate and universally comprehensible
+
+Your goal is to empower patients through clear, respectful visual communication that supports their right to understand their own healthcare.`;
 
     try {
       // First, extract the illustration intent
@@ -157,19 +172,19 @@ User request: "${message}"`;
       switch (intent.type) {
         case 'anatomical':
           if (intent.bodyPart) {
-            return await this.dalleService.generateAnatomicalDiagram(intent.bodyPart);
+            return await this.imagenClient.generateMedicalIllustration(intent.bodyPart, 'realistic');
           } else {
-            return await this.dalleService.generateMedicalIllustration(intent.description, intent.style || 'comic');
+            return await this.imagenClient.generateMedicalIllustration(intent.description, 'realistic');
           }
         
         case 'surgical':
-          return await this.dalleService.generateMedicalIllustration(intent.description, 'comic');
+          return await this.imagenClient.generateMedicalIllustration(intent.description, 'comic');
         
         case 'educational':
-          return await this.dalleService.generateMedicalIllustration(intent.description, 'comic');
+          return await this.imagenClient.generateMedicalIllustration(intent.description, 'comic');
         
         default:
-          return await this.dalleService.generateMedicalIllustration(intent.description, intent.style || 'comic');
+          return await this.imagenClient.generateMedicalIllustration(intent.description, 'realistic');
       }
     } catch (error) {
       console.error('Error generating illustration:', error);
@@ -183,6 +198,6 @@ User request: "${message}"`;
 
 export async function createNaturalIllustrationAgent(userId: string): Promise<NaturalIllustrationAgent> {
   const langGraphClient = await LangGraphClient.forUser(userId);
-  const dalleService = await createDALLEService(userId);
-  return new NaturalIllustrationAgent(langGraphClient, dalleService, userId);
+  const imagenClient = new ImagenClientService(userId);
+  return new NaturalIllustrationAgent(langGraphClient, imagenClient, userId);
 }

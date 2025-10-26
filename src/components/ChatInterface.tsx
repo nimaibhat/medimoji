@@ -71,9 +71,7 @@ interface Message {
     bodyView: string;
     timestamp: Date;
     analysis: {
-      possibleConditions: string[];
-      severity: string;
-      recommendations: string[];
+      content: string;
     };
   };
 }
@@ -573,23 +571,30 @@ export default function ChatInterface({ selectedAgent }: ChatInterfaceProps) {
 
     setMessages(prev => [...prev, userMessage]);
 
-    // Generate AI response based on pain report
+    // Use the actual LLM analysis content directly
     const analysis = painReport.analysis;
     const bodyParts = Array.from(new Set(painReport.painPoints.map((point: any) => point.bodyPart).filter(Boolean)));
-    const responseContent = `Based on your pain drawing, I can see:
+    
+    // Debug: Log the analysis object to see what we're working with
+    console.log('=== CHAT INTERFACE ANALYSIS DEBUG ===');
+    console.log('Analysis object:', JSON.stringify(analysis, null, 2));
+    console.log('Analysis content:', analysis.content);
+    console.log('=== END ANALYSIS DEBUG ===\n');
+    
+    // Use the AI-generated structured content directly
+    const responseContent = `## AI Pain Analysis Report
 
-**Pain Analysis:**
-- Severity: ${analysis.severity.charAt(0).toUpperCase() + analysis.severity.slice(1)}
-- Pain Points: ${painReport.painPoints.length} marked on ${painReport.bodyView} view
-- Body Parts Affected: ${bodyParts.join(', ')}
+### Summary
+- **Pain Points**: ${painReport.painPoints.length} marked on ${painReport.bodyView} view
+- **Body Parts Affected**: ${bodyParts.length > 0 ? bodyParts.join(', ') : 'Multiple areas'}
 
-**Possible Conditions:**
-${analysis.possibleConditions.map((condition: string) => `• ${condition}`).join('\n')}
+---
 
-**Recommendations:**
-${analysis.recommendations.map((rec: string) => `• ${rec}`).join('\n')}
+${analysis.content || 'Analysis content not available'}
 
-This visual pain assessment will help your healthcare provider better understand your symptoms. The pattern recognition suggests ${analysis.possibleConditions[0] || 'localized pain'} which is important information for diagnosis.`;
+---
+
+*This AI analysis is for informational purposes only and should not replace professional medical evaluation.*`;
 
     const assistantMessage: Message = {
       id: (Date.now() + 1).toString(),
@@ -726,49 +731,6 @@ This visual pain assessment will help your healthcare provider better understand
                           revisedPrompt={message.revisedPrompt}
                           onTranslate={(url, desc, labels) => handleImageTranslation(url, desc, labels)}
                         />
-                      </div>
-                    )}
-                    {message.painReport && (
-                      <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <div className="flex items-center space-x-2 mb-3">
-                          <Bone className="h-5 w-5 text-red-500" />
-                          <h4 className="font-medium text-red-900">Pain Report</h4>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          <div>
-                            <span className="font-medium text-gray-700">Pain Points:</span> {message.painReport.painPoints.length} marked on {message.painReport.bodyView} view
-                            {message.painReport.painPoints.length > 0 && (
-                              <div className="mt-2">
-                                <span className="font-medium text-gray-700">Body Parts:</span>
-                                <div className="mt-1 flex flex-wrap gap-1">
-                                  {Array.from(new Set(message.painReport.painPoints.map((point: any) => point.bodyPart).filter(Boolean))).map((bodyPart: string, index: number) => (
-                                    <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                      {bodyPart}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <span className="font-medium text-gray-700">Severity:</span> 
-                            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                              message.painReport.analysis.severity === 'mild' ? 'bg-green-100 text-green-800' :
-                              message.painReport.analysis.severity === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {message.painReport.analysis.severity.charAt(0).toUpperCase() + message.painReport.analysis.severity.slice(1)}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="font-medium text-gray-700">Possible Conditions:</span>
-                            <ul className="mt-1 ml-4 list-disc">
-                              {message.painReport.analysis.possibleConditions.map((condition, index) => (
-                                <li key={index} className="text-gray-600">{condition}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
                       </div>
                     )}
                   </div>

@@ -144,31 +144,151 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
   }, [scene, showWireframe]);
 
   // Function to detect body part based on 3D coordinates
+  // Calibrated using actual coordinate data from male model
   const detectBodyPart = (x: number, y: number, z: number): string => {
-    // Get the actual model bounds to make detection more accurate
-    // Model is positioned at y = -1 and extends upward
-    const modelBottom = -2.1; // Bottom of feet
-    const modelTop = 0.1; // Top of head
-    const modelHeight = modelTop - modelBottom; // Total height = 2.2
-
-    // Calculate relative position from bottom (0 = feet, 1 = head)
-    const relativeY = (y - modelBottom) / modelHeight;
-
-    // Use anatomically accurate thresholds based on human body proportions
-    if (relativeY > 0.88) {
-      return 'Head & Neck';
-    } else if (relativeY > 0.72) {
-      return 'Shoulders & Arms';
-    } else if (relativeY > 0.58) {
-      return 'Chest & Pectorals';
-    } else if (relativeY > 0.45) {
-      return 'Abdomen & Abs';
-    } else if (relativeY > 0.35) {
-      return 'Pelvis & Hips';
-    } else if (relativeY > 0.18) {
-      return 'Thighs & Quads';
-    } else {
-      return 'Calves & Shins';
+    // Using calibrated coordinate ranges from actual model data
+    // Calibration points: Nose(1.62), Chest(1.38), Shoulders(±0.19,1.45), Middle torso(1.26), 
+    // Elbows(±0.32,1.21), Pelvis(0.87), Hands(±0.55,0.91), Knees(±0.16,0.5), Feet(±0.26,0.04)
+    // Hips: Left(-0.15,0.91,0.04), Right(0.15,0.91,0.04)
+    // Back: Upper(0,1.37,-0.14), Mid(0,1.17,-0.09), Lower(0,1.04,-0.12)
+    // Back Shoulders: z ≈ -0.11 (negative Z = back side)
+    // X coordinate: negative = left side, positive = right side
+    
+    // Head and face region (y > 1.55) - above nose level
+    if (y > 1.55) {
+      // Check Z coordinate for more specific head parts
+      if (z > 0.1) {
+        return 'Face';
+      } else if (z < -0.05) {
+        return 'Back of Head';
+      }
+      return 'Head';
+    }
+    
+    // Neck region (y: 1.45 - 1.55) - between shoulders and nose
+    else if (y > 1.45) {
+      return 'Neck';
+    }
+    
+    // Shoulder region (y: 1.35 - 1.45) - around shoulder level
+    else if (y > 1.35) {
+      if (Math.abs(x) > 0.15) {
+        // Check Z coordinate for front vs back shoulders
+        if (z < -0.08) {
+          return x < 0 ? 'Back Left Shoulder' : 'Back Right Shoulder';
+        } else {
+          return x < 0 ? 'Left Shoulder' : 'Right Shoulder';
+        }
+      }
+      return 'Upper Chest';
+    }
+    
+    // Chest region (y: 1.25 - 1.35) - around chest level
+    else if (y > 1.25) {
+      if (Math.abs(x) > 0.15) {
+        return x < 0 ? 'Left Shoulder Blade' : 'Right Shoulder Blade';
+      }
+      // Check Z coordinate for back vs front
+      if (z < -0.1) {
+        return 'Upper Back';
+      }
+      return 'Chest';
+    }
+    
+    // Middle torso region (y: 1.15 - 1.25) - around middle torso level
+    else if (y > 1.15) {
+      if (Math.abs(x) > 0.3) {
+        return x < 0 ? 'Left Elbow' : 'Right Elbow';
+      }
+      // Check Z coordinate for back vs front
+      if (z < -0.05) {
+        return 'Mid Back';
+      }
+      return 'Middle Torso';
+    }
+    
+    // Lower torso region (y: 1.0 - 1.15) - between middle torso and pelvis
+    else if (y > 1.0) {
+      if (Math.abs(x) > 0.3) {
+        return x < 0 ? 'Left Forearm' : 'Right Forearm';
+      }
+      // Check Z coordinate for back vs front
+      if (z < -0.08) {
+        return 'Lower Back';
+      }
+      return 'Lower Torso';
+    }
+    
+    // Pelvis and hand region (y: 0.8 - 1.0) - around pelvis and hand level
+    else if (y > 0.8) {
+      if (Math.abs(x) > 0.5) {
+        // Check Z coordinate for more specific hand parts
+        if (z > 0.05) {
+          return x < 0 ? 'Left Fingers' : 'Right Fingers';
+        } else {
+          return x < 0 ? 'Left Hand' : 'Right Hand';
+        }
+      } else if (Math.abs(x) > 0.3) {
+        return x < 0 ? 'Left Wrist' : 'Right Wrist';
+      } else if (Math.abs(x) > 0.1 && Math.abs(x) < 0.2) {
+        // Check for hips specifically (around x=±0.15, y=0.91)
+        return x < 0 ? 'Left Hip' : 'Right Hip';
+      }
+      return 'Pelvis';
+    }
+    
+    // Thigh region (y: 0.6 - 0.8) - between pelvis and knees
+    else if (y > 0.6) {
+      return x < 0 ? 'Left Thigh' : 'Right Thigh';
+    }
+    
+    // Knee region (y: 0.4 - 0.6) - around knee level
+    else if (y > 0.4) {
+      if (Math.abs(x) > 0.1 && Math.abs(x) < 0.2) {
+        return x < 0 ? 'Left Knee' : 'Right Knee';
+      }
+      // Check Z coordinate for shins (front) vs calves (back)
+      if (z > 0.05) {
+        return x < 0 ? 'Left Shin' : 'Right Shin';
+      } else if (z < -0.05) {
+        return x < 0 ? 'Left Calf' : 'Right Calf';
+      }
+      return x < 0 ? 'Left Lower Leg' : 'Right Lower Leg';
+    }
+    
+    // Lower leg region (y: 0.2 - 0.4) - between knees and feet
+    else if (y > 0.2) {
+      if (Math.abs(x) > 0.2) {
+        return x < 0 ? 'Left Ankle' : 'Right Ankle';
+      }
+      // Check Z coordinate for shins (front) vs calves (back)
+      if (z > 0.05) {
+        return x < 0 ? 'Left Shin' : 'Right Shin';
+      } else if (z < -0.05) {
+        return x < 0 ? 'Left Calf' : 'Right Calf';
+      }
+      return x < 0 ? 'Left Lower Leg' : 'Right Lower Leg';
+    }
+    
+    // Foot region (y: 0.0 - 0.2) - around foot level
+    else if (y > 0.0) {
+      if (Math.abs(x) > 0.2) {
+        // Check Z coordinate for more specific foot parts
+        if (z > 0.05) {
+          return x < 0 ? 'Left Toes' : 'Right Toes';
+        } else {
+          return x < 0 ? 'Left Foot' : 'Right Foot';
+        }
+      }
+      return x < 0 ? 'Left Lower Leg' : 'Right Lower Leg';
+    }
+    
+    // Very bottom - toes region
+    else {
+      if (Math.abs(x) > 0.2) {
+        return x < 0 ? 'Left Toes' : 'Right Toes';
+      }
+      return x < 0 ? 'Left Foot' : 'Right Foot';
     }
   };
 
@@ -190,11 +310,7 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
       });
       
       // Debug logging to help calibrate coordinates
-      const modelBottom = -2.1;
-      const modelHeight = 2.2;
-      const relativeY = (intersection.y - modelBottom) / modelHeight;
       console.log(`Click coordinates: x=${intersection.x.toFixed(2)}, y=${intersection.y.toFixed(2)}, z=${intersection.z.toFixed(2)}`);
-      console.log(`Relative Y position: ${relativeY.toFixed(2)} (0=feet, 1=head)`);
       console.log(`Detected body part: ${bodyPart}`);
       console.log(`Model loaded: ${modelLoaded}, Using fallback: ${useFallback}`);
       
@@ -427,7 +543,7 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
                 <div>Z: {lastClickCoords.z.toFixed(2)}</div>
                 <div>Body Part: {lastClickCoords.bodyPart}</div>
                 <div className="mt-1 text-yellow-300">
-                  Relative Y: {((lastClickCoords.y - (-2.1)) / 2.2).toFixed(2)} (0=feet, 1=head)
+                  Y Position: {lastClickCoords.y.toFixed(2)} (Head: 1.62, Feet: 0.04)
                 </div>
                 <div className="mt-1 text-green-300">
                   Model: {useFallback ? 'Fallback' : 'GLB'} | Loaded: {modelLoaded ? 'Yes' : 'No'}
