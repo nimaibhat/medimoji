@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConversationProvider, useConversation } from '@/contexts/ConversationContext';
+import { VoiceConversationProvider } from '@/contexts/VoiceConversationContext';
 import LoginPage from '@/components/LoginPage';
 import Sidebar from '@/components/Sidebar';
 
@@ -54,7 +55,9 @@ function AppLayoutContent({ children }: AppLayoutProps) {
 export default function AppLayout({ children }: AppLayoutProps) {
   return (
     <ConversationProvider>
-      <AppLayoutContent>{children}</AppLayoutContent>
+      <VoiceConversationProvider>
+        <AppLayoutContent>{children}</AppLayoutContent>
+      </VoiceConversationProvider>
     </ConversationProvider>
   );
 }

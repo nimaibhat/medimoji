@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Mic, Brain, AlertCircle, ExternalLink, Languages, Bone } from 'lucide-react';
+import { Send, Paperclip, Mic, Brain, AlertCircle, ExternalLink, Languages, Bone, Volume2 } from 'lucide-react';
 
 // Speech Recognition types
 declare global {
@@ -41,6 +41,8 @@ import MarkdownRenderer from './MarkdownRenderer';
 import VoiceTranslationWidget from './VoiceTranslationWidget';
 import MedicalIllustrationTranslator from './MedicalIllustrationTranslator';
 import PainDrawingTool from './PainDrawingTool';
+import PatientVoiceDubbingComponent from './PatientVoiceDubbingComponent';
+import PastConversationsTab from './PastConversationsTab';
 
 interface Message {
   id: string;
@@ -102,6 +104,8 @@ export default function ChatInterface({ selectedAgent }: ChatInterfaceProps) {
   const [showTranslationWidget, setShowTranslationWidget] = useState(false);
   const [showIllustrationTranslator, setShowIllustrationTranslator] = useState(false);
   const [showPainDrawingTool, setShowPainDrawingTool] = useState(false);
+  const [showVoiceDubbing, setShowVoiceDubbing] = useState(false);
+  const [voiceDubbingTab, setVoiceDubbingTab] = useState<'session' | 'history'>('session');
   const [selectedImageForTranslation, setSelectedImageForTranslation] = useState<{
     url: string;
     description: string;
@@ -830,6 +834,14 @@ This visual pain assessment will help your healthcare provider better understand
                 </button>
                 <button
                   type="button"
+                  onClick={() => setShowVoiceDubbing(true)}
+                  className="p-1.5 text-gray-400 hover:text-purple-600 transition-colors"
+                  title="Voice Translation - Doctor-Patient Communication"
+                >
+                  <Volume2 className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
                   onClick={handleSpeechToText}
                   disabled={!speechSupported || isLoading}
                   className={`p-1.5 transition-colors ${
@@ -904,6 +916,59 @@ This visual pain assessment will help your healthcare provider better understand
         onClose={() => setShowPainDrawingTool(false)}
         onSendPainReport={handlePainReport}
       />
+
+      {/* Voice Dubbing Modal */}
+      {showVoiceDubbing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center space-x-4">
+                <h2 className="text-2xl font-bold text-gray-900">Voice Translation</h2>
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setVoiceDubbingTab('session')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      voiceDubbingTab === 'session'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    New Session
+                  </button>
+                  <button
+                    onClick={() => setVoiceDubbingTab('history')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      voiceDubbingTab === 'history'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Past Conversations
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowVoiceDubbing(false);
+                  setVoiceDubbingTab('session');
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+              {voiceDubbingTab === 'session' ? (
+                <PatientVoiceDubbingComponent />
+              ) : (
+                <PastConversationsTab onBack={() => setVoiceDubbingTab('session')} />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
