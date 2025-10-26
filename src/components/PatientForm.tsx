@@ -73,12 +73,12 @@ export default function PatientForm({ onStartConversation, onCancel }: PatientFo
                     type="text"
                     value={formData.patientName}
                     onChange={(e) => handleChange('patientName', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                     placeholder="Enter patient name"
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Patient ID
@@ -87,7 +87,7 @@ export default function PatientForm({ onStartConversation, onCancel }: PatientFo
                     type="text"
                     value={formData.patientId}
                     onChange={(e) => handleChange('patientId', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                     placeholder="Optional patient ID"
                   />
                 </div>
@@ -110,10 +110,10 @@ export default function PatientForm({ onStartConversation, onCancel }: PatientFo
                     type="date"
                     value={formData.date}
                     onChange={(e) => handleChange('date', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Time
@@ -122,7 +122,7 @@ export default function PatientForm({ onStartConversation, onCancel }: PatientFo
                     type="time"
                     value={formData.time}
                     onChange={(e) => handleChange('time', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   />
                 </div>
               </div>
@@ -144,11 +144,11 @@ export default function PatientForm({ onStartConversation, onCancel }: PatientFo
                     type="text"
                     value={formData.doctorName}
                     onChange={(e) => handleChange('doctorName', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                     placeholder="Enter doctor name"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Visit Type
@@ -156,7 +156,7 @@ export default function PatientForm({ onStartConversation, onCancel }: PatientFo
                   <select
                     value={formData.visitType}
                     onChange={(e) => handleChange('visitType', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   >
                     <option value="consultation">Consultation</option>
                     <option value="follow-up">Follow-up</option>
@@ -174,7 +174,7 @@ export default function PatientForm({ onStartConversation, onCancel }: PatientFo
               <textarea
                 value={formData.notes}
                 onChange={(e) => handleChange('notes', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 rows={3}
                 placeholder="Any additional notes about this visit..."
               />

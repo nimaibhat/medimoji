@@ -15,9 +15,10 @@ export async function POST(request: NextRequest) {
 
     // Get user's API key from Firestore using Admin SDK
     const userDoc = await adminDb.collection('users').doc(userId).get();
-    const replicateApiKey = userDoc.exists
-      ? userDoc.data()?.replicateApiKey
-      : process.env.REPLICATE_API_TOKEN;
+
+    // Use user's API key if they have one, otherwise fall back to env variable
+    const replicateApiKey = userDoc.data()?.replicateApiKey || process.env.REPLICATE_API_TOKEN;
+
     if (!replicateApiKey) {
       return NextResponse.json(
         { error: 'Replicate API key not configured' },
