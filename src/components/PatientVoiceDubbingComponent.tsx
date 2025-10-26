@@ -260,6 +260,10 @@ export default function VoiceDubbingComponent() {
               console.log('Exchange ID:', exchangeId);
 
               try {
+                if (!currentConversationId) {
+                  throw new Error('No active conversation');
+                }
+                
                 const { originalUrl, translatedUrl } = await AudioStorageService.uploadExchangeAudio(
                   currentConversationId,
                   exchangeId,
@@ -394,8 +398,25 @@ export default function VoiceDubbingComponent() {
     poll();
   }, [targetLanguage, addTranslation, currentConversationId, audioUrl]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
+
   // Play audio
   const playAudio = useCallback((url: string) => {
+    // Stop any other audio playing in the app
+    const allAudioElements = document.querySelectorAll('audio');
+    allAudioElements.forEach(audio => {
+      if (!audio.paused) {
+        audio.pause();
+      }
+    });
+
     if (audioRef.current) {
       audioRef.current.pause();
     }
@@ -406,8 +427,15 @@ export default function VoiceDubbingComponent() {
     audio.onplay = () => setIsPlaying(true);
     audio.onpause = () => setIsPlaying(false);
     audio.onended = () => setIsPlaying(false);
+    audio.onerror = () => {
+      console.error('Audio playback error');
+      setIsPlaying(false);
+    };
     
-    audio.play();
+    audio.play().catch(error => {
+      console.error('Error playing audio:', error);
+      setIsPlaying(false);
+    });
   }, []);
 
   // Download audio
@@ -419,7 +447,7 @@ export default function VoiceDubbingComponent() {
   }, []);
 
   // Handle patient form submission
-  const handlePatientFormSubmit = useCallback(async (patientInfo: any) => {
+  const handlePatientFormSubmit = useCallback(async (patientInfo: { name: string; age: number; gender: string; medicalHistory: string }) => {
     console.log('handlePatientFormSubmit called with:', patientInfo);
     console.log('User UID:', user?.uid);
     

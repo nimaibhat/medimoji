@@ -43,9 +43,7 @@ function AppLayoutContent({ children }: AppLayoutProps) {
         onNewConversation={onNewConversation}
         currentConversationId={currentConversationId}
       />
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${
-        isSidebarCollapsed ? 'ml-16' : 'ml-80'
-      }`}>
+      <div className="flex-1 flex flex-col">
         {children}
       </div>
     </div>

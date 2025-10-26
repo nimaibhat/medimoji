@@ -72,7 +72,7 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
   const [isDrawing, setIsDrawing] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<{ content: string; summary: string } | null>(null);
 
   const handlePainPointAdd = (point: PainPoint) => {
     setPainPoints(prev => [...prev, point]);
@@ -489,7 +489,7 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-gray-600">Click "Analyze Pain" to get AI-powered analysis</p>
+                <p className="text-gray-600">Click &quot;Analyze Pain&quot; to get AI-powered analysis</p>
               </div>
             )}
             
