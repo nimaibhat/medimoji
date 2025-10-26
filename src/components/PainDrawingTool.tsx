@@ -15,9 +15,11 @@ import {
   Heart,
   Brain,
   Bone,
-  RotateCw
+  RotateCw,
+  Loader2
 } from 'lucide-react';
 import ThreeDBodyDiagram from './ThreeDBodyDiagram';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PainPoint {
   id: string;
@@ -44,6 +46,9 @@ interface PainReport {
     possibleConditions: string[];
     severity: 'mild' | 'moderate' | 'severe';
     recommendations: string[];
+    redFlags?: string[];
+    differentialDiagnosis?: string[];
+    clinicalNotes?: string;
   };
 }
 
@@ -62,6 +67,7 @@ const INTENSITY_COLORS = [
 ];
 
 export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: PainDrawingToolProps) {
+  const { user } = useAuth();
   const [painPoints, setPainPoints] = useState<PainPoint[]>([]);
   const [selectedPainType, setSelectedPainType] = useState<PainPoint['type']>('sharp');
   const [selectedIntensity, setSelectedIntensity] = useState(5);
@@ -70,12 +76,14 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
   const [showWireframe, setShowWireframe] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
 
   const handlePainPointAdd = (point: PainPoint) => {
     setPainPoints(prev => [...prev, point]);
   };
 
-  const analyzePainPattern = (): PainReport['analysis'] => {
+  const analyzePainPattern = async (): Promise<PainReport['analysis']> => {
     const currentViewPoints = painPoints.filter(p => p.bodyView === bodyView);
     
     if (currentViewPoints.length === 0) {
@@ -86,62 +94,76 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
       };
     }
 
-    const avgIntensity = currentViewPoints.reduce((sum, p) => sum + p.intensity, 0) / currentViewPoints.length;
-    const severity = avgIntensity <= 3 ? 'mild' : avgIntensity <= 7 ? 'moderate' : 'severe';
-    
-    const conditions: string[] = [];
-    const recommendations: string[] = [];
-    
-    // Pattern recognition logic
-    const hasLowerBackPain = currentViewPoints.some(p => 
-      p.position[1] > 0.3 && p.position[0] > -0.2 && p.position[0] < 0.2 && bodyView === 'back'
-    );
-    
-    const hasChestPain = currentViewPoints.some(p => 
-      p.position[1] > 0.5 && p.position[1] < 1.0 && p.position[0] > -0.2 && p.position[0] < 0.2 && bodyView === 'front'
-    );
-    
-    const hasBilateralPain = currentViewPoints.length >= 2 && 
-      currentViewPoints.every(p => p.intensity > 5);
-    
-    if (hasLowerBackPain) {
-      conditions.push('Lower back pain');
-      recommendations.push('Consider sciatica or muscle strain');
+    if (!user) {
+      return {
+        possibleConditions: ['User not authenticated'],
+        severity: 'moderate',
+        recommendations: ['Please log in to use AI analysis']
+      };
     }
+
+    setIsAnalyzing(true);
     
-    if (hasChestPain) {
-      conditions.push('Chest pain');
-      recommendations.push('Seek immediate medical attention if severe');
+    try {
+      const response = await fetch('/api/analyze-pain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          painPoints: currentViewPoints,
+          userId: user.uid,
+          bodyView: bodyView
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze pain');
+      }
+
+      const analysis = await response.json();
+      setAiAnalysis(analysis);
+      
+      return {
+        possibleConditions: analysis.possibleConditions || [],
+        severity: analysis.severity || 'moderate',
+        recommendations: analysis.recommendations || [],
+        redFlags: analysis.redFlags || [],
+        differentialDiagnosis: analysis.differentialDiagnosis || [],
+        clinicalNotes: analysis.clinicalNotes || ''
+      };
+    } catch (error) {
+      console.error('Error analyzing pain:', error);
+      
+      // Fallback to basic analysis
+      const avgIntensity = currentViewPoints.reduce((sum, p) => sum + p.intensity, 0) / currentViewPoints.length;
+      const severity = avgIntensity <= 3 ? 'mild' : avgIntensity <= 7 ? 'moderate' : 'severe';
+      
+      return {
+        possibleConditions: ['AI analysis unavailable - manual assessment recommended'],
+        severity,
+        recommendations: ['Consult with healthcare provider for detailed assessment'],
+        redFlags: [],
+        differentialDiagnosis: ['Clinical evaluation required'],
+        clinicalNotes: 'AI analysis temporarily unavailable. Please consult with a healthcare provider.'
+      };
+    } finally {
+      setIsAnalyzing(false);
     }
-    
-    if (hasBilateralPain) {
-      conditions.push('Bilateral pain pattern');
-      recommendations.push('May indicate systemic condition');
-    }
-    
-    if (conditions.length === 0) {
-      conditions.push('Localized pain');
-      recommendations.push('Monitor pain intensity and duration');
-    }
-    
-    return {
-      possibleConditions: conditions,
-      severity,
-      recommendations
-    };
   };
 
-  const generatePainReport = (): PainReport => {
+  const generatePainReport = async (): Promise<PainReport> => {
+    const analysis = await analyzePainPattern();
     return {
       painPoints,
       bodyView,
       timestamp: new Date(),
-      analysis: analyzePainPattern()
+      analysis
     };
   };
 
-  const handleSendReport = () => {
-    const report = generatePainReport();
+  const handleSendReport = async () => {
+    const report = await generatePainReport();
     if (onSendPainReport) {
       onSendPainReport(report);
     }
@@ -310,10 +332,20 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
               
               <button
                 onClick={() => setShowAnalysis(true)}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                disabled={isAnalyzing}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <AlertTriangle className="h-4 w-4" />
-                <span>Analyze Pain</span>
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Analyze Pain</span>
+                  </>
+                )}
               </button>
             </div>
 
@@ -352,55 +384,92 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
       {/* Analysis Modal */}
       {showAnalysis && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Pain Analysis</h3>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Pain Analysis</h3>
             
-            {(() => {
-              const analysis = analyzePainPattern();
-              return (
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Severity Level</h4>
-                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      analysis.severity === 'mild' ? 'bg-green-100 text-green-800' :
-                      analysis.severity === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {analysis.severity.charAt(0).toUpperCase() + analysis.severity.slice(1)}
-                    </div>
+            {isAnalyzing ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-2" />
+                  <p className="text-gray-600">AI is analyzing your pain pattern...</p>
+                </div>
+              </div>
+            ) : aiAnalysis ? (
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Severity Assessment</h4>
+                  <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    aiAnalysis.severity === 'mild' ? 'bg-green-100 text-green-800' :
+                    aiAnalysis.severity === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {aiAnalysis.severity?.charAt(0).toUpperCase() + aiAnalysis.severity?.slice(1)}
                   </div>
-                  
+                </div>
+                
+                {aiAnalysis.mainPainPoints && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Main Pain Points</h4>
+                    <p className="text-sm text-gray-600">{aiAnalysis.mainPainPoints}</p>
+                  </div>
+                )}
+                
+                {aiAnalysis.painTypeAnalysis && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Pain Type Analysis</h4>
+                    <p className="text-sm text-gray-600">{aiAnalysis.painTypeAnalysis}</p>
+                  </div>
+                )}
+                
+                {aiAnalysis.possibleConditions && aiAnalysis.possibleConditions.length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Possible Conditions</h4>
                     <ul className="text-sm text-gray-600 space-y-1">
-                      {analysis.possibleConditions.map((condition, index) => (
+                      {aiAnalysis.possibleConditions.map((condition: string, index: number) => (
                         <li key={index}>• {condition}</li>
                       ))}
                     </ul>
                   </div>
-                  
+                )}
+                
+                {aiAnalysis.recommendations && aiAnalysis.recommendations.length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Recommendations</h4>
                     <ul className="text-sm text-gray-600 space-y-1">
-                      {analysis.recommendations.map((rec, index) => (
+                      {aiAnalysis.recommendations.map((rec: string, index: number) => (
                         <li key={index}>• {rec}</li>
                       ))}
                     </ul>
                   </div>
-                </div>
-              );
-            })()}
+                )}
+                
+                {aiAnalysis.clinicalNotes && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Clinical Notes</h4>
+                    <p className="text-sm text-gray-600">{aiAnalysis.clinicalNotes}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-600">Click "Analyze Pain" to get AI-powered analysis</p>
+              </div>
+            )}
             
             <div className="flex items-center justify-end space-x-3 mt-6">
               <button
-                onClick={() => setShowAnalysis(false)}
+                onClick={() => {
+                  setShowAnalysis(false);
+                  setAiAnalysis(null);
+                }}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
               >
                 Close
               </button>
               <button
                 onClick={handleSendReport}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                disabled={isAnalyzing}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Send Report
               </button>
