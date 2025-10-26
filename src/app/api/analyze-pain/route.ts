@@ -7,6 +7,13 @@ export async function POST(request: NextRequest) {
   try {
     const { painPoints, userId, bodyView } = await request.json();
 
+    // Console log the raw data being sent to the LLM
+    console.log('=== PAIN ANALYSIS REQUEST ===');
+    console.log('Raw request data:', { painPoints, userId, bodyView });
+    console.log('Pain points count:', painPoints?.length || 0);
+    console.log('Body view:', bodyView);
+    console.log('User ID:', userId);
+
     if (!painPoints || !Array.isArray(painPoints)) {
       return NextResponse.json(
         { error: 'Pain points array is required' },
@@ -45,12 +52,15 @@ export async function POST(request: NextRequest) {
     const painData = painPoints.map(point => ({
       bodyPart: point.bodyPart,
       painType: point.type,
-      intensity: point.intensity,
-      timestamp: point.timestamp
+      intensity: point.intensity
     }));
 
+    // Console log the processed pain data
+    console.log('=== PROCESSED PAIN DATA ===');
+    console.log('Processed pain data:', JSON.stringify(painData, null, 2));
+
     // Create the analysis prompt
-    const systemPrompt = `You are a medical AI assistant specializing in pain pattern analysis. Analyze the provided pain data and generate a professional, refined medical assessment.
+    const systemPrompt = `You are a medical AI assistant specializing in pain pattern analysis. Analyze the provided pain data and generate a professional, structured medical assessment.
 
 Your analysis should be:
 - Professional and clinically appropriate
@@ -58,6 +68,7 @@ Your analysis should be:
 - Clear about pain severity and type
 - Provide broad but helpful possible conditions
 - Include practical recommendations
+- Use clear headers and bullet points for organization
 
 Be thorough but concise. Use medical terminology appropriately. Consider both acute and chronic pain patterns.`;
 
@@ -66,23 +77,34 @@ Be thorough but concise. Use medical terminology appropriately. Consider both ac
 Body View: ${bodyView}
 Pain Points: ${JSON.stringify(painData, null, 2)}
 
-Provide a structured analysis focusing on:
+Provide a structured analysis with clear headers and bullet points covering:
 
-1. **Main Pain Points**: Identify the primary areas of pain and their characteristics
-2. **Severity Assessment**: Evaluate overall pain severity (mild/moderate/severe) based on intensity and distribution
-3. **Pain Type Analysis**: Describe the types of pain present (sharp, dull, burning, throbbing, etc.) and what they may indicate
-4. **Possible Conditions**: Provide broad possible conditions based on pain patterns (acknowledge limitations of pain-only assessment)
-5. **Recommendations**: Suggest appropriate next steps for evaluation or management
+**Severity Assessment**
+- Overall pain severity (mild/moderate/severe) based on intensity and distribution
 
-Format your response as a JSON object with these exact keys:
-{
-  "severity": "mild|moderate|severe",
-  "mainPainPoints": "Professional description of primary pain areas and characteristics",
-  "painTypeAnalysis": "Analysis of pain types and their clinical significance",
-  "possibleConditions": ["broad condition 1", "broad condition 2", ...],
-  "recommendations": ["recommendation 1", "recommendation 2", ...],
-  "clinicalNotes": "Additional professional observations and context"
-}`;
+**Main Pain Points**
+- Primary areas of pain and their characteristics
+
+**Pain Type Analysis**
+- Types of pain present (sharp, dull, burning, throbbing, etc.) and their clinical significance
+
+**Possible Conditions**
+- Broad possible conditions based on pain patterns (acknowledge limitations of pain-only assessment)
+
+**Recommendations**
+- Appropriate next steps for evaluation or management
+
+**Clinical Notes**
+- Additional professional observations and context
+
+Format your response with clear headers and bullet points. Avoid emojis and keep it professional.`;
+
+    // Console log the prompts being sent to the LLM
+    console.log('=== PROMPTS SENT TO LLM ===');
+    console.log('System Prompt:', systemPrompt);
+    console.log('User Prompt:', userPrompt);
+    console.log('Model:', 'gpt-4o-mini');
+    console.log('Temperature:', 0.7);
 
     // Get AI analysis
     const response = await openai.invoke([
@@ -90,21 +112,20 @@ Format your response as a JSON object with these exact keys:
       new HumanMessage(userPrompt)
     ]);
 
-    // Try to parse the JSON response
-    let analysis;
-    try {
-      analysis = JSON.parse(response.content as string);
-    } catch (parseError) {
-      // If JSON parsing fails, create a structured response from the text
-      analysis = {
-        severity: 'moderate',
-        mainPainPoints: 'Pain pattern analysis required',
-        painTypeAnalysis: 'Unable to analyze pain types from current data',
-        possibleConditions: ['Further evaluation needed'],
-        recommendations: ['Consult with healthcare provider for detailed assessment'],
-        clinicalNotes: response.content
-      };
-    }
+    // Console log the LLM response
+    console.log('=== LLM RESPONSE ===');
+    console.log('Raw LLM response:', response.content);
+    console.log('Response type:', typeof response.content);
+
+    // Return the structured text response directly
+    const analysis = {
+      content: response.content as string
+    };
+
+    // Console log the final response being sent back
+    console.log('=== FINAL RESPONSE ===');
+    console.log('Final analysis being sent:', analysis);
+    console.log('=== END PAIN ANALYSIS REQUEST ===\n');
 
     return NextResponse.json(analysis);
 
@@ -113,12 +134,23 @@ Format your response as a JSON object with these exact keys:
     
     // Fallback analysis if AI fails
     const fallbackAnalysis = {
-      severity: 'moderate',
-      mainPainPoints: 'Pain assessment unavailable - AI analysis failed',
-      painTypeAnalysis: 'Unable to determine pain characteristics',
-      possibleConditions: ['Clinical evaluation required'],
-      recommendations: ['Manual clinical assessment recommended'],
-      clinicalNotes: 'AI analysis temporarily unavailable. Please consult with a healthcare provider for proper assessment.'
+      content: `**Severity Assessment**
+- Moderate pain severity based on available data
+
+**Main Pain Points**
+- AI analysis temporarily unavailable
+
+**Pain Type Analysis**
+- Unable to determine pain characteristics at this time
+
+**Possible Conditions**
+- Further evaluation recommended
+
+**Recommendations**
+- Retry analysis or seek professional medical assessment
+
+**Clinical Notes**
+- AI analysis temporarily unavailable. Please try again or consult with a healthcare provider for proper assessment.`
     };
 
     return NextResponse.json(fallbackAnalysis);

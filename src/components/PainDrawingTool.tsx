@@ -43,12 +43,7 @@ interface PainReport {
   bodyView: 'front' | 'back';
   timestamp: Date;
   analysis: {
-    possibleConditions: string[];
-    severity: 'mild' | 'moderate' | 'severe';
-    recommendations: string[];
-    redFlags?: string[];
-    differentialDiagnosis?: string[];
-    clinicalNotes?: string;
+    content: string;
   };
 }
 
@@ -88,17 +83,45 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
     
     if (currentViewPoints.length === 0) {
       return {
-        possibleConditions: [],
-        severity: 'mild',
-        recommendations: ['Please mark areas of pain on the body diagram']
+        content: `**Severity Assessment**
+- Mild pain severity (no pain points marked)
+
+**Main Pain Points**
+- No pain points marked on the body diagram
+
+**Pain Type Analysis**
+- Unable to analyze without pain point data
+
+**Possible Conditions**
+- No specific conditions identified
+
+**Recommendations**
+- Please mark areas of pain on the body diagram
+
+**Clinical Notes**
+- No pain data available for analysis`
       };
     }
 
     if (!user) {
       return {
-        possibleConditions: ['User not authenticated'],
-        severity: 'moderate',
-        recommendations: ['Please log in to use AI analysis']
+        content: `**Severity Assessment**
+- Moderate pain severity (user not authenticated)
+
+**Main Pain Points**
+- Unable to analyze without user authentication
+
+**Pain Type Analysis**
+- Authentication required for AI analysis
+
+**Possible Conditions**
+- User not authenticated
+
+**Recommendations**
+- Please log in to use AI analysis
+
+**Clinical Notes**
+- User authentication required for pain analysis`
       };
     }
 
@@ -124,13 +147,9 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
       const analysis = await response.json();
       setAiAnalysis(analysis);
       
+      // Return the structured text content directly
       return {
-        possibleConditions: analysis.possibleConditions || [],
-        severity: analysis.severity || 'moderate',
-        recommendations: analysis.recommendations || [],
-        redFlags: analysis.redFlags || [],
-        differentialDiagnosis: analysis.differentialDiagnosis || [],
-        clinicalNotes: analysis.clinicalNotes || ''
+        content: analysis.content || 'Analysis unavailable'
       };
     } catch (error) {
       console.error('Error analyzing pain:', error);
@@ -140,12 +159,23 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
       const severity = avgIntensity <= 3 ? 'mild' : avgIntensity <= 7 ? 'moderate' : 'severe';
       
       return {
-        possibleConditions: ['AI analysis unavailable - manual assessment recommended'],
-        severity,
-        recommendations: ['Consult with healthcare provider for detailed assessment'],
-        redFlags: [],
-        differentialDiagnosis: ['Clinical evaluation required'],
-        clinicalNotes: 'AI analysis temporarily unavailable. Please consult with a healthcare provider.'
+        content: `**Severity Assessment**
+- ${severity.charAt(0).toUpperCase() + severity.slice(1)} pain severity based on intensity levels
+
+**Main Pain Points**
+- AI analysis temporarily unavailable
+
+**Pain Type Analysis**
+- Unable to determine pain characteristics at this time
+
+**Possible Conditions**
+- AI analysis temporarily unavailable
+
+**Recommendations**
+- Retry analysis or consult healthcare provider
+
+**Clinical Notes**
+- AI analysis temporarily unavailable. Please try again or consult with a healthcare provider for proper assessment.`
       };
     } finally {
       setIsAnalyzing(false);
@@ -164,6 +194,13 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
 
   const handleSendReport = async () => {
     const report = await generatePainReport();
+    
+    // Console log the pain report being sent
+    console.log('=== PAIN REPORT BEING SENT ===');
+    console.log('Full pain report:', JSON.stringify(report, null, 2));
+    console.log('Analysis data:', JSON.stringify(report.analysis, null, 2));
+    console.log('=== END PAIN REPORT ===\n');
+    
     if (onSendPainReport) {
       onSendPainReport(report);
     }
