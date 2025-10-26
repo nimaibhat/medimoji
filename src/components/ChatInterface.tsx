@@ -61,13 +61,13 @@ interface Message {
   painReport?: {
     painPoints: Array<{
       id: string;
-      x: number;
-      y: number;
+      position: [number, number, number];
       intensity: number;
       type: string;
       size: number;
       timestamp: Date;
       bodyView: 'front' | 'back';
+      bodyPart?: string;
     }>;
     bodyView: 'front' | 'back';
     timestamp: Date;
@@ -593,13 +593,13 @@ export default function ChatInterface({ selectedAgent }: ChatInterfaceProps) {
   const handlePainReport = (painReport: {
     painPoints: Array<{
       id: string;
-      x: number;
-      y: number;
+      position: [number, number, number];
       intensity: number;
       type: string;
       size: number;
       timestamp: Date;
       bodyView: 'front' | 'back';
+      bodyPart?: string;
     }>;
     bodyView: 'front' | 'back';
     timestamp: Date;
