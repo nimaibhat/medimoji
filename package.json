@@ -21,6 +21,7 @@
     "firebase-admin": "^13.5.0",
     "google-auth-library": "^10.4.1",
     "googleapis": "^164.1.0",
+    "jszip": "^3.10.1",
     "langchain": "^1.0.1",
     "lucide-react": "^0.546.0",
     "next": "15.5.6",
