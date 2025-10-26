@@ -14,8 +14,7 @@ import {
   Plus,
   Trash2,
   FileText,
-  Activity,
-  ChevronRight
+  Activity
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConversationManager, Conversation } from '@/lib/conversation-manager';
@@ -260,11 +259,6 @@ export default function Sidebar({
                         <p className="text-xs text-slate-500 mt-1 font-medium">
                           {formatTimestamp(conversation.updatedAt)}
                         </p>
-                      </div>
-                      <div className={`mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
-                        currentConversationId === conversation.id ? 'opacity-100' : ''
-                      }`}>
-                        <ChevronRight className="h-4 w-4 text-slate-400" strokeWidth={1.5} />
                       </div>
                     </div>
                   </button>

@@ -1042,13 +1042,13 @@ ${analysis.content || 'Analysis content not available'}
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center space-x-4">
-                <h2 className="text-2xl font-bold text-gray-900">Voice Translation</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Voice Translation</h2>
                 <div className="flex bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setVoiceDubbingTab('session')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       voiceDubbingTab === 'session'
-                        ? 'bg-white text-blue-600 shadow-sm'
+                        ? 'bg-white text-gray-900 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
@@ -1056,9 +1056,9 @@ ${analysis.content || 'Analysis content not available'}
                   </button>
                   <button
                     onClick={() => setVoiceDubbingTab('history')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       voiceDubbingTab === 'history'
-                        ? 'bg-white text-blue-600 shadow-sm'
+                        ? 'bg-white text-gray-900 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
