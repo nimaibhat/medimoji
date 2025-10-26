@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     console.log('Processed pain data:', JSON.stringify(painData, null, 2));
 
     // Create the analysis prompt
-    const systemPrompt = `You are a medical AI assistant specializing in pain pattern analysis. Analyze the provided pain data and generate a professional, structured medical assessment.
+    const systemPrompt = `You are a medical AI assistant specializing in pain pattern analysis. Analyze the provided pain data and generate a professional, structured medical assessment in markdown format.
 
 Your analysis should be:
 - Professional and clinically appropriate
@@ -68,36 +68,36 @@ Your analysis should be:
 - Clear about pain severity and type
 - Provide broad but helpful possible conditions
 - Include practical recommendations
-- Use clear headers and bullet points for organization
+- Use proper markdown formatting with ## headers, bullet points, and other markdown elements
 
-Be thorough but concise. Use medical terminology appropriately. Consider both acute and chronic pain patterns.`;
+Be thorough but concise. Use medical terminology appropriately. Consider both acute and chronic pain patterns. Format your response in clean, readable markdown.`;
 
-    const userPrompt = `Please analyze this pain data and provide a professional medical assessment:
+    const userPrompt = `Please analyze this pain data and provide a professional medical assessment in markdown format:
 
 Body View: ${bodyView}
 Pain Points: ${JSON.stringify(painData, null, 2)}
 
-Provide a structured analysis with clear headers and bullet points covering:
+Provide a structured markdown analysis covering:
 
-**Severity Assessment**
+## Severity Assessment
 - Overall pain severity (mild/moderate/severe) based on intensity and distribution
 
-**Main Pain Points**
+## Main Pain Points
 - Primary areas of pain and their characteristics
 
-**Pain Type Analysis**
+## Pain Type Analysis
 - Types of pain present (sharp, dull, burning, throbbing, etc.) and their clinical significance
 
-**Possible Conditions**
+## Possible Conditions
 - Broad possible conditions based on pain patterns (acknowledge limitations of pain-only assessment)
 
-**Recommendations**
+## Recommendations
 - Appropriate next steps for evaluation or management
 
-**Clinical Notes**
+## Clinical Notes
 - Additional professional observations and context
 
-Format your response with clear headers and bullet points. Avoid emojis and keep it professional.`;
+Use proper markdown formatting with ## headers, bullet points, and any other markdown elements that would enhance readability. Avoid emojis and keep it professional.`;
 
     // Console log the prompts being sent to the LLM
     console.log('=== PROMPTS SENT TO LLM ===');
@@ -134,22 +134,22 @@ Format your response with clear headers and bullet points. Avoid emojis and keep
     
     // Fallback analysis if AI fails
     const fallbackAnalysis = {
-      content: `**Severity Assessment**
+      content: `## Severity Assessment
 - Moderate pain severity based on available data
 
-**Main Pain Points**
+## Main Pain Points
 - AI analysis temporarily unavailable
 
-**Pain Type Analysis**
+## Pain Type Analysis
 - Unable to determine pain characteristics at this time
 
-**Possible Conditions**
+## Possible Conditions
 - Further evaluation recommended
 
-**Recommendations**
+## Recommendations
 - Retry analysis or seek professional medical assessment
 
-**Clinical Notes**
+## Clinical Notes
 - AI analysis temporarily unavailable. Please try again or consult with a healthcare provider for proper assessment.`
     };
 

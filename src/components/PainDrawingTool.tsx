@@ -83,44 +83,44 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
     
     if (currentViewPoints.length === 0) {
       return {
-        content: `**Severity Assessment**
+        content: `## Severity Assessment
 - Mild pain severity (no pain points marked)
 
-**Main Pain Points**
+## Main Pain Points
 - No pain points marked on the body diagram
 
-**Pain Type Analysis**
+## Pain Type Analysis
 - Unable to analyze without pain point data
 
-**Possible Conditions**
+## Possible Conditions
 - No specific conditions identified
 
-**Recommendations**
+## Recommendations
 - Please mark areas of pain on the body diagram
 
-**Clinical Notes**
+## Clinical Notes
 - No pain data available for analysis`
       };
     }
 
     if (!user) {
       return {
-        content: `**Severity Assessment**
+        content: `## Severity Assessment
 - Moderate pain severity (user not authenticated)
 
-**Main Pain Points**
+## Main Pain Points
 - Unable to analyze without user authentication
 
-**Pain Type Analysis**
+## Pain Type Analysis
 - Authentication required for AI analysis
 
-**Possible Conditions**
+## Possible Conditions
 - User not authenticated
 
-**Recommendations**
+## Recommendations
 - Please log in to use AI analysis
 
-**Clinical Notes**
+## Clinical Notes
 - User authentication required for pain analysis`
       };
     }
@@ -159,22 +159,22 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
       const severity = avgIntensity <= 3 ? 'mild' : avgIntensity <= 7 ? 'moderate' : 'severe';
       
       return {
-        content: `**Severity Assessment**
+        content: `## Severity Assessment
 - ${severity.charAt(0).toUpperCase() + severity.slice(1)} pain severity based on intensity levels
 
-**Main Pain Points**
+## Main Pain Points
 - AI analysis temporarily unavailable
 
-**Pain Type Analysis**
+## Pain Type Analysis
 - Unable to determine pain characteristics at this time
 
-**Possible Conditions**
+## Possible Conditions
 - AI analysis temporarily unavailable
 
-**Recommendations**
+## Recommendations
 - Retry analysis or consult healthcare provider
 
-**Clinical Notes**
+## Clinical Notes
 - AI analysis temporarily unavailable. Please try again or consult with a healthcare provider for proper assessment.`
       };
     } finally {
