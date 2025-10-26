@@ -125,9 +125,9 @@ export default function Sidebar({
         <div className="mb-8">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm overflow-hidden bg-white border-2" style={{ borderColor: '#113B5C' }}>
             <img 
-              src="/Medimoji_Logo-removebg-preview.png" 
-              alt="MediMoji Logo" 
-              className="h-16 w-16 object-contain"
+              src="/ohio_state_logo.png" 
+              alt="Ohio State Logo" 
+              className="h-8 w-8 object-contain"
             />
           </div>
         </div>
@@ -178,15 +178,15 @@ export default function Sidebar({
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm overflow-hidden bg-white border-2" style={{ borderColor: '#113B5C' }}>
-              <img 
-                src="/Medimoji_Logo-removebg-preview.png" 
-                alt="MediMoji Logo" 
-                className="h-16 w-16 object-contain"
-              />
+            <img 
+              src="/ohio_state_logo.png" 
+              alt="Ohio State Logo" 
+              className="h-8 w-8 object-contain"
+            />
             </div>
             <div>
-              <h1 className="text-lg font-semibold tracking-tight" style={{ color: '#113B5C' }}>MediMoji</h1>
-              <p className="text-xs font-medium uppercase tracking-wide" style={{ color: '#76C5E0' }}>Clinical Assistant</p>
+              <h1 className="text-lg font-semibold tracking-tight" style={{ color: '#113B5C' }}>Hack OHI/O</h1>
+              <p className="text-xs font-medium uppercase tracking-wide" style={{ color: '#76C5E0' }}>2025</p>
             </div>
           </div>
           <button
@@ -305,7 +305,7 @@ export default function Sidebar({
               <UserCircle2 className="h-5 w-5 text-slate-600" strokeWidth={1.5} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-slate-900 truncate">Dr. {user?.displayName || 'User'}</p>
+              <p className="text-sm font-medium text-slate-900 truncate">{user?.displayName || 'User'}</p>
               <p className="text-xs text-slate-500 truncate">{user?.email}</p>
             </div>
           </div>

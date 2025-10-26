@@ -971,7 +971,6 @@ ${analysis.content || 'Analysis content not available'}
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       <span>Curie is online</span>
                     </span>
-                    <span>Press Enter to send</span>
                   </div>
                   <div className="text-xs text-slate-400">
                     HIPAA compliant • Secure
