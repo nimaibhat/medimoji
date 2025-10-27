@@ -5,13 +5,14 @@ import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 
 export async function POST(request: NextRequest) {
   try {
-    const { painPoints, userId, bodyView } = await request.json();
+    const { painPoints, userId, bodyView, gender } = await request.json();
 
     // Console log the raw data being sent to the LLM
     console.log('=== PAIN ANALYSIS REQUEST ===');
-    console.log('Raw request data:', { painPoints, userId, bodyView });
+    console.log('Raw request data:', { painPoints, userId, bodyView, gender });
     console.log('Pain points count:', painPoints?.length || 0);
     console.log('Body view:', bodyView);
+    console.log('Gender:', gender);
     console.log('User ID:', userId);
 
     if (!painPoints || !Array.isArray(painPoints)) {
@@ -75,6 +76,7 @@ Be thorough but concise. Use medical terminology appropriately. Consider both ac
     const userPrompt = `Please analyze this pain data and provide a professional medical assessment in markdown format:
 
 Body View: ${bodyView}
+Gender: ${gender}
 Pain Points: ${JSON.stringify(painData, null, 2)}
 
 Provide a structured markdown analysis covering:

@@ -145,7 +145,8 @@ export default function PainDrawingTool({ isOpen, onClose, onSendPainReport }: P
         body: JSON.stringify({
           painPoints: currentViewPoints,
           userId: user.uid,
-          bodyView: bodyView
+          bodyView: bodyView,
+          gender: gender
         }),
       });
 

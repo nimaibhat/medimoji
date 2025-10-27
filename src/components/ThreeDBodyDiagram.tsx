@@ -152,7 +152,7 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
     // Hips: Left(-0.15,0.91,0.04), Right(0.15,0.91,0.04)
     // Back: Upper(0,1.37,-0.14), Mid(0,1.17,-0.09), Lower(0,1.04,-0.12)
     // Back Shoulders: z ≈ -0.11 (negative Z = back side)
-    // X coordinate: negative = left side, positive = right side
+    // X coordinate: positive = left side, negative = right side
     
     // Head and face region (y > 1.55) - above nose level
     if (y > 1.55) {
@@ -175,9 +175,9 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
       if (Math.abs(x) > 0.15) {
         // Check Z coordinate for front vs back shoulders
         if (z < -0.08) {
-          return x < 0 ? 'Back Left Shoulder' : 'Back Right Shoulder';
+          return x > 0 ? 'Back Left Shoulder' : 'Back Right Shoulder';
         } else {
-          return x < 0 ? 'Left Shoulder' : 'Right Shoulder';
+          return x > 0 ? 'Left Shoulder' : 'Right Shoulder';
         }
       }
       return 'Upper Chest';
@@ -186,7 +186,7 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
     // Chest region (y: 1.25 - 1.35) - around chest level
     else if (y > 1.25) {
       if (Math.abs(x) > 0.15) {
-        return x < 0 ? 'Left Shoulder Blade' : 'Right Shoulder Blade';
+        return x > 0 ? 'Left Shoulder Blade' : 'Right Shoulder Blade';
       }
       // Check Z coordinate for back vs front
       if (z < -0.1) {
@@ -198,7 +198,7 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
     // Middle torso region (y: 1.15 - 1.25) - around middle torso level
     else if (y > 1.15) {
       if (Math.abs(x) > 0.3) {
-        return x < 0 ? 'Left Elbow' : 'Right Elbow';
+        return x > 0 ? 'Left Elbow' : 'Right Elbow';
       }
       // Check Z coordinate for back vs front
       if (z < -0.05) {
@@ -210,7 +210,7 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
     // Lower torso region (y: 1.0 - 1.15) - between middle torso and pelvis
     else if (y > 1.0) {
       if (Math.abs(x) > 0.3) {
-        return x < 0 ? 'Left Forearm' : 'Right Forearm';
+        return x > 0 ? 'Left Forearm' : 'Right Forearm';
       }
       // Check Z coordinate for back vs front
       if (z < -0.08) {
@@ -224,50 +224,50 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
       if (Math.abs(x) > 0.5) {
         // Check Z coordinate for more specific hand parts
         if (z > 0.05) {
-          return x < 0 ? 'Left Fingers' : 'Right Fingers';
+          return x > 0 ? 'Left Fingers' : 'Right Fingers';
         } else {
-          return x < 0 ? 'Left Hand' : 'Right Hand';
+          return x > 0 ? 'Left Hand' : 'Right Hand';
         }
       } else if (Math.abs(x) > 0.3) {
-        return x < 0 ? 'Left Wrist' : 'Right Wrist';
+        return x > 0 ? 'Left Wrist' : 'Right Wrist';
       } else if (Math.abs(x) > 0.1 && Math.abs(x) < 0.2) {
         // Check for hips specifically (around x=±0.15, y=0.91)
-        return x < 0 ? 'Left Hip' : 'Right Hip';
+        return x > 0 ? 'Left Hip' : 'Right Hip';
       }
       return 'Pelvis';
     }
     
     // Thigh region (y: 0.6 - 0.8) - between pelvis and knees
     else if (y > 0.6) {
-      return x < 0 ? 'Left Thigh' : 'Right Thigh';
+      return x > 0 ? 'Left Thigh' : 'Right Thigh';
     }
     
     // Knee region (y: 0.4 - 0.6) - around knee level
     else if (y > 0.4) {
       if (Math.abs(x) > 0.1 && Math.abs(x) < 0.2) {
-        return x < 0 ? 'Left Knee' : 'Right Knee';
+        return x > 0 ? 'Left Knee' : 'Right Knee';
       }
       // Check Z coordinate for shins (front) vs calves (back)
       if (z > 0.05) {
-        return x < 0 ? 'Left Shin' : 'Right Shin';
+        return x > 0 ? 'Left Shin' : 'Right Shin';
       } else if (z < -0.05) {
-        return x < 0 ? 'Left Calf' : 'Right Calf';
+        return x > 0 ? 'Left Calf' : 'Right Calf';
       }
-      return x < 0 ? 'Left Lower Leg' : 'Right Lower Leg';
+      return x > 0 ? 'Left Lower Leg' : 'Right Lower Leg';
     }
     
     // Lower leg region (y: 0.2 - 0.4) - between knees and feet
     else if (y > 0.2) {
       if (Math.abs(x) > 0.2) {
-        return x < 0 ? 'Left Ankle' : 'Right Ankle';
+        return x > 0 ? 'Left Ankle' : 'Right Ankle';
       }
       // Check Z coordinate for shins (front) vs calves (back)
       if (z > 0.05) {
-        return x < 0 ? 'Left Shin' : 'Right Shin';
+        return x > 0 ? 'Left Shin' : 'Right Shin';
       } else if (z < -0.05) {
-        return x < 0 ? 'Left Calf' : 'Right Calf';
+        return x > 0 ? 'Left Calf' : 'Right Calf';
       }
-      return x < 0 ? 'Left Lower Leg' : 'Right Lower Leg';
+      return x > 0 ? 'Left Lower Leg' : 'Right Lower Leg';
     }
     
     // Foot region (y: 0.0 - 0.2) - around foot level
@@ -275,20 +275,20 @@ function HumanModel({ painPoints, onPainPointAdd, selectedPainType, selectedInte
       if (Math.abs(x) > 0.2) {
         // Check Z coordinate for more specific foot parts
         if (z > 0.05) {
-          return x < 0 ? 'Left Toes' : 'Right Toes';
+          return x > 0 ? 'Left Toes' : 'Right Toes';
         } else {
-          return x < 0 ? 'Left Foot' : 'Right Foot';
+          return x > 0 ? 'Left Foot' : 'Right Foot';
         }
       }
-      return x < 0 ? 'Left Lower Leg' : 'Right Lower Leg';
+      return x > 0 ? 'Left Lower Leg' : 'Right Lower Leg';
     }
     
     // Very bottom - toes region
     else {
       if (Math.abs(x) > 0.2) {
-        return x < 0 ? 'Left Toes' : 'Right Toes';
+        return x > 0 ? 'Left Toes' : 'Right Toes';
       }
-      return x < 0 ? 'Left Foot' : 'Right Foot';
+      return x > 0 ? 'Left Foot' : 'Right Foot';
     }
   };
 
