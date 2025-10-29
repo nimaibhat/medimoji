@@ -1,61 +1,70 @@
-# MediMoji - Doctor Automation Service
+# MediMoji
 
-A comprehensive AI-powered platform for medical professionals that combines a conversational chatbot interface with specialized AI agents for practice management and medical illustration generation.
+Medimoji is a clinician‑friendly assistant that turns conversations, sketches, and instructions into clear medical visuals, summaries, and multilingual voice outputs. It focuses on removing language and literacy barriers in care.
 
 ## Features
 
-### AI Agent System
-- **@email** - Mass Communication Agent
-  - Template management for patient communications
-  - Merge fields (patient name, appointment times, etc.)
-  - Scheduling/delayed sending
-  - Tracking (opened, clicked)
-  - HIPAA-compliant email handling
+### Live Translation + Reports
+- Real‑time language translation during consultation
+- Instant physician summary reports and transcripts
+- Optional Gmail agent for secure sharing via Google OAuth
 
-  - Natural language queries → charts
+How it works:
+- Audio is captured in-browser, transcribed, translated, and optionally dubbed into the target language while preserving timing.
+- A reporting pipeline assembles transcripts, translations, and key findings into physician‑friendly summaries.
+- Conversations and generated media are stored securely, enabling playback, downloads, and history.
 
-- **@illustration** - Medical Illustration Agent
-  - Text-to-medical-image generation
-  - Anatomical diagrams, surgical procedure illustrations
-  - Annotation and labeling capabilities
-  - Style options (realistic, schematic, patient-friendly)
+### Interactive Pain Map
+- Dynamic 3D body diagram where patients mark pain location, intensity, and type
+- Converts inputs into structured reports for clinicians
+- Supports male/female models, front/back views, and multiple pain types
 
-- **@assistant** - General Medical Assistant (default)
-  - Clinical decision support
-  - Literature search
-  - Documentation help
-  - Drug interaction checks
+How it works:
+- A web‑based 3D human model allows patients to click and annotate pain points with type and intensity.
+- The system infers likely anatomical regions from coordinates and aggregates multiple points into a structured, shareable report.
+- Built-in fallbacks ensure graceful behavior on lower‑end devices and during model loading.
 
-### Chat Interface
-- Clean, clinical chat UI inspired by modern AI assistants
-- Command system with @ triggers for different AI agents
-- Persistent chat history per session
-- Quick access toolbar for common functions
-- Real-time agent suggestions
+### AI Visual Education
+- From physician notes, generates simple, patient‑friendly infographics or comics
+- Minimal text; visuals optimized for health literacy
+- Powered by multi‑agent prompts and image generation backends
+
+How it works:
+- A language understanding layer extracts the educational intent from notes and chooses an appropriate visual style (schematic, patient‑friendly, comic, realistic).
+- An image generation layer creates multi‑panel visuals with minimal text, optimized for comprehension and cultural sensitivity.
+- Optional retrieval and revision steps refine prompts and outputs before delivery to the clinician.
 
 ### Authentication
 - Firebase Authentication with email/password and Google sign-in
 - Secure user sessions
 - HIPAA-compliant data handling
 
+### Conversation & History
+- Layered message processing with agent routing
+- Persistent conversation history and voice conversation logs
+
+How it works:
+- The application maintains authenticated sessions and routes each user request to the right capability (assistant, illustration, email, voice) using a lightweight classifier.
+- Conversations, media, and generated content are persisted to enable longitudinal context and reuse across visits.
+- The UI surfaces past exchanges, audio playbacks, and generated visuals for quick review and sharing.
+
 ## Tech Stack
 
-- **Frontend**: Next.js 15 with TypeScript
-- **Styling**: Tailwind CSS
-- **Authentication**: Firebase Auth
-- **AI Integration**: LangGraph with OpenAI
-- **Icons**: Lucide React
-- **UI Components**: Radix UI primitives
-- **Storage**: Firestore
+- **Frontend**: Next.js (App Router), React, TypeScript, Tailwind CSS
+- **3D/Visualization**: Three.js, React Three Fiber
+- **Backend & Auth**: Firebase, Firestore/Storage, Firebase Auth, Google OAuth (Gmail agent)
+- **AI/ML**: LangChain, LangGraph, OpenAI, Replicate, ElevenLabs (dubbing/voice)
+- **Other**: Pinecone or vector backends optional for retrieval (RAG patterns), Lucide icons
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
-- Firebase project with Authentication enabled
+- Firebase project with Auth, Firestore, and Storage
 - OpenAI API key
-- Google Cloud project with Gmail API enabled (for email features)
+- ElevenLabs API key (for dubbing/voice)
+- Google Cloud project with Gmail API enabled (for email agent)
 
 ### Installation
 
@@ -89,6 +98,13 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000  # For OAuth callbacks
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/gmail/callback
+
+# ElevenLabs (Voice Dubbing)
+ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+
+# Optional: Firebase Admin for server features
+FIREBASE_CLIENT_EMAIL=your_firebase_client_email
+FIREBASE_PRIVATE_KEY=your_firebase_private_key
 ```
 
 4. Run the development server:
@@ -100,47 +116,53 @@ npm run dev
 
 ## Usage
 
-### Command System
-Use @ commands to interact with specific AI agents:
-
-- `@email send reminder to all patients` - Use the email agent
-- `@illustration create heart diagram` - Use the illustration agent
-- `@assistant check drug interactions` - Use the general assistant
-
 ### Sidebar Navigation
 - Click on sidebar icons to switch between different functions
 - Calendar, Patients, Documents, Files, and New options available
 - Settings and logout in the bottom section
 
-### Predefined Prompts
-The interface includes helpful predefined prompts for common tasks:
-- "What appointments do I have tomorrow?"
-- "Please send my patients a reminder email for their next appointment"
-- "Please give me a summary of how my patients are doing"
-- "Give me an in depth analysis on one of my patients"
-- "Give me historical data on one of my patients"
+### Agents and Commands
+- `@illustration` – create medical visuals from notes
+- `@assistant` – general reasoning, summaries, explanations
+- `@email` – Gmail agent for secure communications
 
 ## Project Structure
 
 ```
 src/
-├── app/                 # Next.js app directory
-│   ├── layout.tsx      # Root layout with AuthProvider
-│   └── page.tsx        # Main page component
-├── components/         # React components
-│   ├── Dashboard.tsx   # Main dashboard component
-│   ├── LoginPage.tsx   # Authentication page
-│   ├── Sidebar.tsx     # Left navigation sidebar
-│   └── ChatInterface.tsx # Main chat interface
-├── contexts/           # React contexts
-│   └── AuthContext.tsx # Authentication context
-└── lib/                # Utility libraries
-    ├── firebase.ts     # Firebase configuration
-    ├── langgraph-client.ts # LangGraph client implementation
-    ├── gmail-oauth.ts  # Gmail OAuth integration
-    ├── agents.ts       # AI agent implementations
-    └── commandParser.ts # Command parsing utilities
+├── app/                      # Next.js app directory
+│   ├── landing/              # Public landing page
+│   ├── dashboard/            # Main dashboard
+│   ├── voice-history/        # Voice conversation history
+│   └── api/                  # Server routes (Next.js Route Handlers)
+│       ├── elevenlabs-dubbing/
+│       ├── generate-image/
+│       ├── gmail/send/
+│       ├── transcribe-audio/
+│       └── analyze-pain/
+├── components/               # UI & feature components
+│   ├── ChatInterface.tsx
+│   ├── VoiceDubbingComponent.tsx
+│   ├── PatientVoiceDubbingComponent.tsx
+│   ├── ThreeDBodyDiagram.tsx
+│   └── PainDrawingTool.tsx
+├── contexts/
+│   ├── AuthContext.tsx
+│   └── VoiceConversationContext.tsx
+└── lib/                      # AI, services, and integrations
+    ├── elevenlabs-dubbing-service.ts
+    ├── natural-illustration-agent.ts
+    ├── natural-email-agent.ts
+    ├── transcription-service.ts
+    ├── langgraph-client.ts
+    └── firebase.ts
 ```
+
+## Security & Privacy
+
+- Authentication handled by Firebase Auth; API keys are server‑side where possible
+- Avoid sending PHI to third‑party APIs unless explicitly configured for compliance
+- Environment variables are required for external services; do not commit secrets
 
 ## Contributing
 
