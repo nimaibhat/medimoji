@@ -54,7 +54,6 @@ How it works:
 - **3D/Visualization**: Three.js, React Three Fiber
 - **Backend & Auth**: Firebase, Firestore/Storage, Firebase Auth, Google OAuth (Gmail agent)
 - **AI/ML**: LangChain, LangGraph, OpenAI, Replicate, ElevenLabs (dubbing/voice)
-- **Other**: Pinecone or vector backends optional for retrieval (RAG patterns), Lucide icons
 
 ## Getting Started
 
